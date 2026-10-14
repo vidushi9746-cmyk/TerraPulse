@@ -101,14 +101,15 @@ function validateConfig(config = {}) {
     );
   }
 
-  // 5. forecastWindowHours must be a positive finite number (> 0)
+  // 5. forecastWindowHours must be a positive integer representing whole hours (> 0)
   if (
     typeof merged.forecastWindowHours !== 'number' ||
     !Number.isFinite(merged.forecastWindowHours) ||
+    !Number.isInteger(merged.forecastWindowHours) ||
     merged.forecastWindowHours <= 0
   ) {
     throw new Error(
-      `Invalid forecastWindowHours: must be a positive finite number (> 0). Received: ${merged.forecastWindowHours}`
+      `Invalid forecastWindowHours: must be a positive integer representing whole hours. Received: ${merged.forecastWindowHours}`
     );
   }
 
@@ -194,6 +195,18 @@ function clampMoisture(moisture) {
  * }}
  */
 export function filterForecastWindow(forecast, decisionTime, windowHours = 6) {
+  // Validate windowHours: must be a positive integer representing whole hours
+  if (
+    typeof windowHours !== 'number' ||
+    !Number.isFinite(windowHours) ||
+    !Number.isInteger(windowHours) ||
+    windowHours <= 0
+  ) {
+    throw new Error(
+      `Invalid windowHours: must be a positive integer representing whole hours. Received: ${windowHours}`
+    );
+  }
+
   const warnings = [];
 
   // 1. Resolve decision time and window end time
@@ -223,8 +236,10 @@ export function filterForecastWindow(forecast, decisionTime, windowHours = 6) {
     };
   }
 
-  // 3. Filter intervals that fall within the decision window [startMs, windowEndMs]
-  // Allow a small tolerance for intervals scheduled at hour boundaries
+  // 3. Filter intervals that fall strictly AFTER decisionTime and up to windowEndMs
+  // In Open-Meteo, an interval timestamped at decisionTime represents the preceding hour
+  // (past rain). To evaluate future forecast rain, we exclude intervals at or before
+  // decisionTime (itemMs <= startMs) and include intervals up to windowEndMs.
   const intervalsInWindow = [];
   for (let i = 0; i < forecast.length; i++) {
     const item = forecast[i];
@@ -236,11 +251,16 @@ export function filterForecastWindow(forecast, decisionTime, windowHours = 6) {
       continue;
     }
 
-    // Include intervals falling within the window
-    if (itemMs >= startMs && itemMs <= windowEndMs) {
+    // Include future intervals inside the window (strictly after startMs and up to windowEndMs)
+    if (itemMs > startMs && itemMs <= windowEndMs) {
       intervalsInWindow.push(item);
     }
   }
+
+  // Sort intervals chronologically to enable robust gap and coverage analysis
+  intervalsInWindow.sort(
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  );
 
   // 4. Verify whether the window is adequately covered
   if (intervalsInWindow.length === 0) {
@@ -257,13 +277,50 @@ export function filterForecastWindow(forecast, decisionTime, windowHours = 6) {
     };
   }
 
-  // For an hourly forecast across windowHours, check if coverage reaches near the end of the window
-  const latestIntervalMs = Math.max(...intervalsInWindow.map((it) => new Date(it.timestamp).getTime()));
-  const missingCoverageMs = windowEndMs - latestIntervalMs;
-  // If the latest interval is more than 1.5 hours short of the window end, flag as incomplete
-  if (missingCoverageMs > 1.5 * 60 * 60 * 1000 && intervalsInWindow.length < windowHours) {
+  // Open-Meteo provides hourly forecast readings spaced 1 hour (3,600,000 ms) apart.
+  // For a window of windowHours, we require:
+  //   a) At least windowHours hourly intervals.
+  //   b) Continuity: no gap > 1.5 hours between consecutive intervals (catches missing intermediate hours).
+  //   c) Timely start: first interval must be within 1.5 hours of decisionTime.
+  //   d) Full reach: latest interval must reach within 1.5 hours of windowEndMs.
+  const expectedIntervals = windowHours;
+
+  if (intervalsInWindow.length < expectedIntervals) {
     warnings.push(
-      `Forecast data only covers ${intervalsInWindow.length} hour(s) of the requested ${windowHours}-hour window.`
+      `Forecast coverage is incomplete: received ${intervalsInWindow.length} interval(s), but at least ${expectedIntervals} hourly interval(s) are required for a ${windowHours}-hour window.`
+    );
+  }
+
+  // Check start timeliness
+  const firstIntervalMs = new Date(intervalsInWindow[0].timestamp).getTime();
+  if (firstIntervalMs - startMs > 1.5 * 60 * 60 * 1000) {
+    warnings.push(
+      `Forecast starts late: first available interval at ${intervalsInWindow[0].timestamp} is more than 1.5 hours after decision time (${decisionTimeIso}).`
+    );
+  }
+
+  // Check continuity (gaps between consecutive intervals)
+  for (let i = 1; i < intervalsInWindow.length; i++) {
+    const prevMs = new Date(intervalsInWindow[i - 1].timestamp).getTime();
+    const currMs = new Date(intervalsInWindow[i].timestamp).getTime();
+    const gapMs = currMs - prevMs;
+    if (gapMs > 1.5 * 60 * 60 * 1000) {
+      const gapHours = (gapMs / (60 * 60 * 1000)).toFixed(1);
+      warnings.push(
+        `Missing forecast data: gap of ${gapHours} hours detected between ${intervalsInWindow[i - 1].timestamp} and ${intervalsInWindow[i].timestamp}.`
+      );
+    }
+  }
+
+  // Check end coverage reach
+  const latestIntervalMs = new Date(
+    intervalsInWindow[intervalsInWindow.length - 1].timestamp
+  ).getTime();
+  const missingEndCoverageMs = windowEndMs - latestIntervalMs;
+  if (missingEndCoverageMs > 1.5 * 60 * 60 * 1000) {
+    const missingHours = (missingEndCoverageMs / (60 * 60 * 1000)).toFixed(1);
+    warnings.push(
+      `Forecast ends prematurely: latest interval at ${intervalsInWindow[intervalsInWindow.length - 1].timestamp} is ${missingHours} hour(s) short of the requested ${windowHours}-hour window.`
     );
   }
 

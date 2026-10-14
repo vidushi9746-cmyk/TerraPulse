@@ -263,4 +263,153 @@ describe('Irrigation Engine Test Suite', () => {
     assert.strictEqual(result.fallbackApplied, false);
     assert.ok(result.reason.includes('deferred until after the rain event'));
   });
+
+  it('Regression 1: Exclude interval at decisionTime, include future intervals inside window, exclude beyond window (with end-to-end comparison)', () => {
+    // decisionTime = '2026-10-14T12:00:00.000Z', 6-hour window (12:00 to 18:00)
+    // 12:00 has 50 mm (deliberately large past rain) -> MUST BE EXCLUDED
+    // 13:00 to 18:00 have 2 mm each (6 intervals * 2 mm = 12 mm future rain) -> MUST BE INCLUDED
+    // 19:00 has 100 mm (deliberately large rain beyond window end) -> MUST BE EXCLUDED
+    const forecast = [
+      { timestamp: '2026-10-14T12:00:00.000Z', precipitation: 50.0 }, // exactly at decisionTime (past rain)
+      { timestamp: '2026-10-14T13:00:00.000Z', precipitation: 2.0 },
+      { timestamp: '2026-10-14T14:00:00.000Z', precipitation: 2.0 },
+      { timestamp: '2026-10-14T15:00:00.000Z', precipitation: 2.0 },
+      { timestamp: '2026-10-14T16:00:00.000Z', precipitation: 2.0 },
+      { timestamp: '2026-10-14T17:00:00.000Z', precipitation: 2.0 },
+      { timestamp: '2026-10-14T18:00:00.000Z', precipitation: 2.0 },
+      { timestamp: '2026-10-14T19:00:00.000Z', precipitation: 100.0 }, // beyond window end
+    ];
+
+    // 1. Direct helper verification
+    const res = filterForecastWindow(forecast, '2026-10-14T12:00:00.000Z', 6);
+    assert.strictEqual(res.status, 'VALID');
+    assert.strictEqual(res.intervals.length, 6);
+    // Verifies 50 mm at 12:00 and 100 mm at 19:00 were excluded; exactly 12 mm future rain included
+    assert.strictEqual(res.totalRainMm, 12.0);
+    assert.strictEqual(res.intervals[0].timestamp, '2026-10-14T13:00:00.000Z');
+    assert.strictEqual(res.intervals[5].timestamp, '2026-10-14T18:00:00.000Z');
+
+    // 2. End-to-end irrigation comparison verification:
+    // Derivation of expected decisions under starting moisture = 25.0%:
+    // - dryThreshold = 35.0%, targetMoisture = 60.0%, absorptionFactor = 0.5
+    // - Conventional strategy:
+    //     moisture (25.0%) < dryThreshold (35.0%) -> triggers IRRIGATE
+    //     deficit = 60.0 - 25.0 = 35.0%
+    //     waterAppliedMm = 35.0 / 0.5 = 70.0 mm
+    // - Forecast-aware strategy:
+    //     future rain inside window = 12.0 mm (6 intervals * 2.0 mm)
+    //     projected moisture from rain = 25.0 + (12.0 * 0.5) = 31.0%
+    //     Since 31.0% < dryThreshold (35.0%) and rain (12.0 mm) >= minSignificantRainMm (5.0 mm),
+    //     rule B2 applies: decision is REDUCE (NOT DEFER)
+    //     netDeficit to target = 60.0 - 31.0 = 29.0%
+    //     waterAppliedMm = 29.0 / 0.5 = 58.0 mm
+    // - Sensitivity check (ensures test fails if excluded rain leaks in):
+    //     If the 50 mm past rain at 12:00 leaked in:
+    //       total rain = 62.0 mm -> projected moisture = 25.0 + 31.0 = 56.0% >= 35.0% -> falsely triggers DEFER (0.0 mm applied)
+    //     If the 100 mm beyond-window rain at 19:00 leaked in:
+    //       total rain = 112.0 mm -> projected moisture = 25.0 + 56.0 = 81.0% >= 35.0% -> falsely triggers DEFER (0.0 mm applied)
+    const env = {
+      ...baseEnvironmentState,
+      updatedAt: '2026-10-14T12:00:00.000Z',
+      forecast,
+    };
+    const compResult = compareIrrigation(env, 25.0, { forecastWindowHours: 6 });
+
+    assert.strictEqual(compResult.conventional.decision, 'IRRIGATE');
+    assert.strictEqual(compResult.conventional.waterAppliedMm, 70.0);
+    assert.strictEqual(compResult.conventional.projectedMoisture, 60.0);
+
+    assert.strictEqual(compResult.forecastAware.decision, 'REDUCE');
+    assert.strictEqual(compResult.forecastAware.waterAppliedMm, 58.0);
+    assert.strictEqual(compResult.forecastAware.projectedMoisture, 60.0);
+    assert.strictEqual(compResult.forecastAware.fallbackApplied, false);
+
+    assert.strictEqual(compResult.comparison.waterSavedMm, 12.0);
+    assert.strictEqual(compResult.comparison.waterSavedPercent, 17.1);
+    assert.strictEqual(compResult.comparison.recommendation, 'FORECAST_AWARE');
+  });
+
+  it('Regression 2: Missing middle intervals marked INSUFFICIENT and trigger conventional fallback', () => {
+    // Only 2 intervals provided (13:00 and 18:00), missing 14:00, 15:00, 16:00, 17:00
+    // Even though 18:00 reaches near the window end, intermediate hours are missing
+    const sparseForecast = [
+      { timestamp: '2026-10-14T13:00:00.000Z', precipitation: 10.0 },
+      { timestamp: '2026-10-14T18:00:00.000Z', precipitation: 10.0 },
+    ];
+
+    // 1. Direct helper verification
+    const windowRes = filterForecastWindow(sparseForecast, '2026-10-14T12:00:00.000Z', 6);
+    assert.strictEqual(windowRes.status, 'INSUFFICIENT');
+    assert.strictEqual(windowRes.totalRainMm, null); // never report sum on incomplete data
+    assert.ok(windowRes.warnings.length > 0);
+    assert.ok(
+      windowRes.warnings.some((w) => w.includes('gap') || w.includes('incomplete'))
+    );
+
+    // 2. Full engine verification with fallback
+    const env = {
+      ...baseEnvironmentState,
+      updatedAt: '2026-10-14T12:00:00.000Z',
+      forecast: sparseForecast,
+    };
+    const result = compareIrrigation(env, 25.0, { forecastWindowHours: 6 });
+
+    assert.strictEqual(result.forecastAware.forecastStatus, 'INSUFFICIENT');
+    assert.strictEqual(result.forecastAware.fallbackApplied, true);
+    assert.strictEqual(result.forecastAware.decision, 'IRRIGATE');
+    assert.strictEqual(result.forecastAware.waterAppliedMm, 70.0); // (60 - 25) / 0.5
+    assert.ok(result.forecastAware.reason.includes('falling back to conventional'));
+  });
+
+  it('Regression 3: Missing or null precipitation never becomes zero rainfall', () => {
+    // 6 intervals present, but hour 3 has null and hour 5 has undefined precipitation
+    const forecastWithNulls = [
+      { timestamp: '2026-10-14T13:00:00.000Z', precipitation: 5.0 },
+      { timestamp: '2026-10-14T14:00:00.000Z', precipitation: 5.0 },
+      { timestamp: '2026-10-14T15:00:00.000Z', precipitation: null },
+      { timestamp: '2026-10-14T16:00:00.000Z', precipitation: 5.0 },
+      { timestamp: '2026-10-14T17:00:00.000Z', precipitation: undefined },
+      { timestamp: '2026-10-14T18:00:00.000Z', precipitation: 5.0 },
+    ];
+
+    const res = filterForecastWindow(forecastWithNulls, '2026-10-14T12:00:00.000Z', 6);
+    assert.strictEqual(res.status, 'INSUFFICIENT');
+    assert.strictEqual(res.totalRainMm, null); // NOT 20.0 (does not treat null/undefined as 0)
+    assert.ok(
+      res.warnings.some((w) => w.includes('Never assuming zero rain'))
+    );
+
+    const env = {
+      ...baseEnvironmentState,
+      updatedAt: '2026-10-14T12:00:00.000Z',
+      forecast: forecastWithNulls,
+    };
+    const result = compareIrrigation(env, 25.0, { forecastWindowHours: 6 });
+    assert.strictEqual(result.forecastAware.fallbackApplied, true);
+    assert.strictEqual(result.forecastAware.decision, 'IRRIGATE');
+  });
+
+  it('Regression 4: Fractional forecast window hours are rejected with a clear validation error', () => {
+    // 1. A window shorter than one hour (e.g. 0.8) must be rejected
+    assert.throws(
+      () => compareIrrigation(baseEnvironmentState, 25.0, { forecastWindowHours: 0.8 }),
+      /Invalid forecastWindowHours: must be a positive integer representing whole hours/
+    );
+
+    assert.throws(
+      () => filterForecastWindow([], '2026-10-14T12:00:00.000Z', 0.8),
+      /Invalid windowHours: must be a positive integer representing whole hours/
+    );
+
+    // 2. Fractional window greater than one hour (e.g. 2.5) must also be rejected
+    assert.throws(
+      () => compareIrrigation(baseEnvironmentState, 25.0, { forecastWindowHours: 2.5 }),
+      /Invalid forecastWindowHours: must be a positive integer representing whole hours/
+    );
+
+    assert.throws(
+      () => filterForecastWindow([], '2026-10-14T12:00:00.000Z', 2.5),
+      /Invalid windowHours: must be a positive integer representing whole hours/
+    );
+  });
 });
