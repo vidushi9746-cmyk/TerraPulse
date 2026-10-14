@@ -6,19 +6,19 @@ const scenarios = [
         id: 'sunny',
         name: 'Sunny Day',
         description: 'Hot conditions with little or no expected rainfall.',
-        icon: '☀️',
+        icon: '\u2600\uFE0F',
     },
     {
         id: 'rainy',
         name: 'Rain Expected',
         description: 'Rain is expected, so irrigation may be reduced.',
-        icon: '🌧️',
+        icon: '\uD83C\uDF27\uFE0F',
     },
     {
         id: 'heavy-rain',
         name: 'Heavy Rain',
         description: 'High rainfall may increase soil saturation.',
-        icon: '⛈️',
+        icon: '\u26C8\uFE0F',
     },
 ];
 
