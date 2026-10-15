@@ -310,7 +310,9 @@ export function LocationSearchModal({ isOpen, onClose, onSelectLocation, current
                     </div>
                     <div className="item-coords-box">
                       <span>
-                        {item.latitude.toFixed(2)}°, {item.longitude.toFixed(2)}°
+                        {typeof item.latitude === 'number' && typeof item.longitude === 'number'
+                          ? `${item.latitude.toFixed(2)}°, ${item.longitude.toFixed(2)}°`
+                          : '—'}
                       </span>
                       {isSelected && <Check size={16} className="text-emerald" />}
                     </div>

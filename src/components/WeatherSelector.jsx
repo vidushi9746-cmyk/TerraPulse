@@ -179,7 +179,9 @@ export function WeatherSelector({
               <div className="live-summary-stats">
                 <div className="live-stat-item">
                   <span className="live-stat-val">
-                    {liveWeather.temperature !== null ? `${liveWeather.temperature.toFixed(1)}°C` : '--'}
+                    {typeof liveWeather?.temperature === 'number' && Number.isFinite(liveWeather.temperature)
+                      ? `${liveWeather.temperature.toFixed(1)}°C`
+                      : '--'}
                   </span>
                   <span className="live-stat-lbl">Air Temp</span>
                 </div>

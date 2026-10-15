@@ -23,6 +23,7 @@ import { ScenarioSelector } from './components/ScenarioSelector';
 import { SimulationControls } from './components/SimulationControls';
 import { FarmConfigModal } from './components/FarmConfigModal';
 import { AddCropModal } from './components/AddCropModal';
+import { formatPrecipitation } from './utils/formatters';
 import { LocationSearchModal } from './components/LocationSearchModal';
 import {
   Droplet,
@@ -600,7 +601,10 @@ export function App() {
         ? MOCK_WEATHER_DATA.cloudy?.scene
         : MOCK_WEATHER_DATA.sunny?.scene) || MOCK_WEATHER_DATA.sunny.scene;
 
-    const dewPointC = Number((tempC - (100 - humidity) / 5).toFixed(1));
+    const dewPointC =
+      typeof tempC === 'number' && Number.isFinite(tempC) && typeof humidity === 'number' && Number.isFinite(humidity)
+        ? Number((tempC - (100 - humidity) / 5).toFixed(1))
+        : null;
 
     // Dynamic agronomic indicators derived from simulated soil moisture
     const isLowMoisture = currentSoilMoisture < 30;
@@ -637,7 +641,12 @@ export function App() {
       cropHealthScore > 85 ? '#B8D6A0' : cropHealthScore > 65 ? '#E0A94F' : '#D96B5B';
 
     // Evapotranspiration Rate Estimation (FAO-56 heuristic)
-    const etRate = Number((0.8 + (tempC / 20) * (windSpeed / 12) * (1 - humidity / 140)).toFixed(1));
+    const etRate =
+      typeof tempC === 'number' && Number.isFinite(tempC) &&
+      typeof windSpeed === 'number' && Number.isFinite(windSpeed) &&
+      typeof humidity === 'number' && Number.isFinite(humidity)
+        ? Number((0.8 + (tempC / 20) * (windSpeed / 12) * (1 - humidity / 140)).toFixed(1))
+        : 1.2;
 
     // Irrigation action and rationale from comparison engine
     const engineDecision = comparisonResult?.forecastAware?.decision;
@@ -919,9 +928,7 @@ export function App() {
               </div>
               <div className="metric-pill-main">
                 <span className="metric-pill-val">
-                  {weatherData?.precipitationRateMmH !== undefined
-                    ? `${weatherData.precipitationRateMmH.toFixed(1)} mm/h`
-                    : '0.0 mm/h'}
+                  {formatPrecipitation(weatherData?.precipitationRateMmH, '—')}
                 </span>
                 <span className="metric-pill-sub">Precipitation</span>
               </div>
@@ -1040,9 +1047,7 @@ export function App() {
                       <CloudRain size={11} /> Rainfall
                     </span>
                     <span className="detail-val">
-                      {weatherData.precipitationRateMmH !== undefined && weatherData.precipitationRateMmH !== null
-                        ? `${weatherData.precipitationRateMmH.toFixed(1)} mm/h`
-                        : '0.0 mm/h'}
+                      {formatPrecipitation(weatherData.precipitationRateMmH, '—')}
                     </span>
                   </div>
                   <div className="weather-detail-item">
@@ -1050,7 +1055,7 @@ export function App() {
                       <Wind size={11} /> Wind
                     </span>
                     <span className="detail-val">
-                      {weatherData.windSpeedKmH !== null && weatherData.windSpeedKmH !== undefined
+                      {typeof weatherData.windSpeedKmH === 'number' && Number.isFinite(weatherData.windSpeedKmH)
                         ? `${weatherData.windSpeedKmH.toFixed(1)} km/h${weatherData.windDirection ? ` • ${weatherData.windDirection}` : ''}`
                         : '--'}
                     </span>

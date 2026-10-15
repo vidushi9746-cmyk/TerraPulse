@@ -109,7 +109,8 @@ export function WeatherMetrics({ weatherData, location }) {
           <span className="provenance-source">
             {isLive ? 'Source: Open-Meteo Meteorological API' : 'Source: Demo Simulation Preset'}
           </span>
-          {location?.latitude !== undefined && location?.longitude !== undefined && (
+          {typeof location?.latitude === 'number' && Number.isFinite(location.latitude) &&
+           typeof location?.longitude === 'number' && Number.isFinite(location.longitude) && (
             <span className="provenance-coords">
               • Coord: {location.latitude.toFixed(2)}°, {location.longitude.toFixed(2)}°
             </span>

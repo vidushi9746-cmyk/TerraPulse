@@ -71,7 +71,9 @@ export function ComparisonPanel({
           <span className="delta-label">ESTIMATED WATER DIFFERENCE</span>
           <div className="delta-value-row">
             <span className="delta-number">
-              {waterSavedMm !== null ? `${waterSavedMm.toFixed(1)} mm` : `${Math.abs(savedLitres).toLocaleString()} L`}
+              {typeof waterSavedMm === 'number' && Number.isFinite(waterSavedMm)
+                ? `${waterSavedMm.toFixed(1)} mm`
+                : `${Math.abs(savedLitres).toLocaleString()} L`}
             </span>
             <span className="delta-volume">
               ({Math.abs(savedLitres).toLocaleString()} L / {farmAreaSqm.toLocaleString()} m²)
@@ -124,7 +126,9 @@ export function ComparisonPanel({
             <div className="strategy-metric">
               <span className="strat-metric-label">Water Applied:</span>
               <span className="strat-metric-val font-semibold">
-                {reactiveMm !== null ? `${reactiveMm.toFixed(1)} mm` : `${reactive.toLocaleString()} L`}
+                {typeof reactiveMm === 'number' && Number.isFinite(reactiveMm)
+                  ? `${reactiveMm.toFixed(1)} mm`
+                  : `${reactive.toLocaleString()} L`}
               </span>
             </div>
             {reactiveMm !== null && (
@@ -166,7 +170,9 @@ export function ComparisonPanel({
             <div className="strategy-metric">
               <span className="strat-metric-label">Water Applied:</span>
               <span className="strat-metric-val font-semibold">
-                {forecastAwareMm !== null ? `${forecastAwareMm.toFixed(1)} mm` : `${forecastAwareVal.toLocaleString()} L`}
+                {typeof forecastAwareMm === 'number' && Number.isFinite(forecastAwareMm)
+                  ? `${forecastAwareMm.toFixed(1)} mm`
+                  : `${forecastAwareVal.toLocaleString()} L`}
               </span>
             </div>
             {forecastAwareMm !== null && (
@@ -201,7 +207,9 @@ export function ComparisonPanel({
         <div className="context-item">
           <span className="context-label">Rainfall Considered:</span>
           <span className="context-value font-semibold">
-            {rainMm !== null ? `${rainMm.toFixed(1)} mm` : 'Data Unavailable'}
+            {typeof rainMm === 'number' && Number.isFinite(rainMm)
+              ? `${rainMm.toFixed(1)} mm`
+              : 'Data Unavailable'}
           </span>
         </div>
         <div className="context-item">
