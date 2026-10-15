@@ -179,28 +179,36 @@ export function WeatherSelector({
               <div className="live-summary-stats">
                 <div className="live-stat-item">
                   <span className="live-stat-val">
-                    {liveWeather.temperature !== null ? `${liveWeather.temperature.toFixed(1)}°C` : '--'}
+                    {typeof liveWeather.temperature === 'number' && Number.isFinite(liveWeather.temperature)
+                      ? `${liveWeather.temperature.toFixed(1)}°C`
+                      : '--'}
                   </span>
                   <span className="live-stat-lbl">Air Temp</span>
                 </div>
                 <div className="live-stat-sep"></div>
                 <div className="live-stat-item">
                   <span className="live-stat-val">
-                    {liveWeather.humidity !== null ? `${liveWeather.humidity}%` : '--'}
+                    {typeof liveWeather.humidity === 'number' && Number.isFinite(liveWeather.humidity)
+                      ? `${liveWeather.humidity}%`
+                      : '--'}
                   </span>
                   <span className="live-stat-lbl">Humidity</span>
                 </div>
                 <div className="live-stat-sep"></div>
                 <div className="live-stat-item">
                   <span className="live-stat-val">
-                    {liveWeather.windSpeed !== null ? `${liveWeather.windSpeed} km/h` : '--'}
+                    {typeof liveWeather.windSpeed === 'number' && Number.isFinite(liveWeather.windSpeed)
+                      ? `${liveWeather.windSpeed} km/h`
+                      : '--'}
                   </span>
                   <span className="live-stat-lbl">Wind Speed</span>
                 </div>
                 <div className="live-stat-sep"></div>
                 <div className="live-stat-item">
                   <span className="live-stat-val text-sky">
-                    {liveWeather.precipitation !== null ? `${liveWeather.precipitation} mm` : '0 mm'}
+                    {typeof liveWeather.precipitation === 'number' && Number.isFinite(liveWeather.precipitation)
+                      ? `${liveWeather.precipitation.toFixed(1)} mm`
+                      : 'Unavailable'}
                   </span>
                   <span className="live-stat-lbl">Precipitation</span>
                 </div>
@@ -223,7 +231,10 @@ export function WeatherSelector({
 
               <div className="hourly-forecast-strip" tabIndex={0} role="region" aria-label="Hourly Weather Forecast Strip">
                 {next12Hours.map((hr, idx) => {
-                  const hasRain = hr.precipitation !== null && hr.precipitation > 0;
+                  const hasRain =
+                    typeof hr.precipitation === 'number' &&
+                    Number.isFinite(hr.precipitation) &&
+                    hr.precipitation > 0;
                   return (
                     <div key={idx} className={`hourly-forecast-chip ${hasRain ? 'rain-expected' : ''}`}>
                       <span className="hourly-time">{formatHour(hr.timestamp)}</span>
@@ -231,10 +242,16 @@ export function WeatherSelector({
                         {getForecastIcon(hr.weatherCode, hr.precipitation)}
                       </div>
                       <span className="hourly-temp">
-                        {hr.temperature !== null ? `${Math.round(hr.temperature)}°` : '--'}
+                        {typeof hr.temperature === 'number' && Number.isFinite(hr.temperature)
+                          ? `${Math.round(hr.temperature)}°`
+                          : '--'}
                       </span>
                       <span className={`hourly-precip ${hasRain ? 'text-sky font-semibold' : ''}`}>
-                        {hasRain ? `${hr.precipitation.toFixed(1)}mm` : '0mm'}
+                        {hasRain
+                          ? `${hr.precipitation.toFixed(1)}mm`
+                          : typeof hr.precipitation === 'number' && Number.isFinite(hr.precipitation)
+                          ? '0mm'
+                          : '--'}
                       </span>
                     </div>
                   );

@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { MOCK_WEATHER_DATA } from './data/mockWeather';
-import { fetchCurrentWeather, degreesToCompass } from './services/weatherService';
+import { fetchCurrentWeather, degreesToCompass, formatPrecipitationRate } from './services/weatherService';
 import { fetchHourlyForecast } from './services/forecastService';
 import { fetchSoilMoisture } from './services/soilMoistureService';
 import { estimateSoilMoisture } from './farmSimulation';
@@ -11,6 +11,8 @@ import {
   GROWTH_STAGES,
   convertAreaToSqm,
   deriveCropIrrigationThresholds,
+  calculatePlotThresholds,
+  estimateCropCanopyHealth,
 } from './data/cropConfig';
 import { LandingPage } from './components/LandingPage';
 import { DashboardHeader } from './components/DashboardHeader';
@@ -511,7 +513,10 @@ export function App() {
   const weatherData = useMemo(() => {
     const activeHourWeather = getTimelineWeather(simStepHours);
     const tempC = activeHourWeather.tempC;
-    const tempF = Number(((tempC * 9) / 5 + 32).toFixed(1));
+    const tempF =
+      typeof tempC === 'number' && Number.isFinite(tempC)
+        ? Number(((tempC * 9) / 5 + 32).toFixed(1))
+        : null;
     const humidity = activeHourWeather.humidity;
     const windSpeed = activeHourWeather.windSpeed;
     const windDirectionDeg = activeHourWeather.windDirection;
@@ -585,7 +590,10 @@ export function App() {
         ? MOCK_WEATHER_DATA.cloudy?.scene
         : MOCK_WEATHER_DATA.sunny?.scene) || MOCK_WEATHER_DATA.sunny.scene;
 
-    const dewPointC = Number((tempC - (100 - humidity) / 5).toFixed(1));
+    const dewPointC =
+      typeof tempC === 'number' && typeof humidity === 'number' && Number.isFinite(tempC) && Number.isFinite(humidity)
+        ? Number((tempC - (100 - humidity) / 5).toFixed(1))
+        : null;
 
     // Dynamic agronomic indicators derived from simulated soil moisture
     const isLowMoisture = currentSoilMoisture < 30;
@@ -604,10 +612,20 @@ export function App() {
 
     const uvRating = uvIndex <= 2 ? 'Low' : uvIndex <= 5 ? 'Moderate' : uvIndex <= 7 ? 'High' : 'Very High';
 
-    // Crop Health Score Curve (Bell curve centered around optimal 45% moisture)
-    const optimalMoisture = 45;
-    const moistureDist = Math.abs(currentSoilMoisture - optimalMoisture);
-    const cropHealthScore = Math.max(30, Math.min(99, Math.round(98 - Math.pow(moistureDist / 5.2, 1.6))));
+    // Farm-wide Crop Health Index derived from active cultivated plot canopy estimates
+    const activePlotHealthEstimates = farmConfig?.plots
+      ? farmConfig.plots
+          .map((p) => estimateCropCanopyHealth(p, currentSoilMoisture))
+          .filter((h) => h.isSupported && h.score !== null)
+      : [];
+
+    const cropHealthScore =
+      activePlotHealthEstimates.length > 0
+        ? Math.round(
+            activePlotHealthEstimates.reduce((sum, h) => sum + h.score, 0) /
+              activePlotHealthEstimates.length
+          )
+        : Math.max(30, Math.min(99, Math.round(98 - Math.pow(Math.abs(currentSoilMoisture - 45) / 5.2, 1.6))));
 
     const cropHealthStatus =
       cropHealthScore > 90
@@ -622,7 +640,10 @@ export function App() {
       cropHealthScore > 85 ? '#B8D6A0' : cropHealthScore > 65 ? '#E0A94F' : '#D96B5B';
 
     // Evapotranspiration Rate Estimation (FAO-56 heuristic)
-    const etRate = Number((0.8 + (tempC / 20) * (windSpeed / 12) * (1 - humidity / 140)).toFixed(1));
+    const etRate =
+      typeof tempC === 'number' && typeof windSpeed === 'number' && typeof humidity === 'number' && Number.isFinite(tempC) && Number.isFinite(windSpeed) && Number.isFinite(humidity)
+        ? Number((0.8 + (tempC / 20) * (windSpeed / 12) * (1 - humidity / 140)).toFixed(1))
+        : 3.5;
 
     // Irrigation action and rationale from comparison engine
     const engineDecision = comparisonResult?.forecastAware?.decision;
@@ -691,9 +712,9 @@ export function App() {
         cropHealthStatus,
         cropHealthColor,
         soilTemperatureC:
-          activeHourWeather.soilTemperature !== null && activeHourWeather.soilTemperature !== undefined
+          typeof activeHourWeather.soilTemperature === 'number' && Number.isFinite(activeHourWeather.soilTemperature)
             ? Number(activeHourWeather.soilTemperature.toFixed(1))
-            : (selectedScenario !== 'live' ? Number((tempC * 0.85).toFixed(1)) : null),
+            : (selectedScenario !== 'live' && typeof tempC === 'number' && Number.isFinite(tempC) ? Number((tempC * 0.85).toFixed(1)) : null),
         soilTemperatureMode:
           selectedScenario === 'live' && activeHourWeather.soilTemperature !== null
             ? 'model-estimate'
@@ -756,13 +777,26 @@ export function App() {
   const selectedPlotDetails = useMemo(() => {
     if (!selectedRowId) return null;
     if (selectedPlot) {
+      const thresholds = calculatePlotThresholds(selectedPlot);
+      const healthEstimate = estimateCropCanopyHealth(selectedPlot, currentSoilMoisture);
+
       return {
         title: selectedPlot.name,
         density: cropInfo?.density || 'Standard Precision Furrow',
-        health: `${weatherData?.simulation?.cropHealthScore || 96}% (${
-          weatherData?.simulation?.cropHealthStatus || 'Active Growth'
-        })`,
-        moistureNeed: `${cropInfo?.category || 'Field Crop'} • Target ${cropThresholds.targetMoisture}%`,
+        health:
+          thresholds.isSupported && healthEstimate.score !== null
+            ? `${healthEstimate.score}% (${healthEstimate.status})`
+            : 'N/A (Unsupported Crop)',
+        healthScore: healthEstimate.score,
+        healthStatus: healthEstimate.status,
+        healthColor: healthEstimate.color,
+        isEstimate: true,
+        targetMoisture: thresholds.targetMoisture,
+        dryThreshold: thresholds.dryThreshold,
+        moistureNeed:
+          thresholds.isSupported && thresholds.targetMoisture !== null
+            ? `${cropInfo?.category || 'Field Crop'} • Target ${thresholds.targetMoisture}% VWC`
+            : 'Target moisture unconfigured',
         irrigationZone: `Zone ${selectedRowId.replace('row-', '0')}`,
         stage: `${cropInfo?.name || 'Crop'} • ${stageInfo?.label || 'Vegetative Growth'}`,
         isFallow: false,
@@ -772,12 +806,18 @@ export function App() {
       title: `Furrow ${selectedRowId.replace('row-', '0')} — Fallow / Uncultivated`,
       density: '0 Stalks (Tilled Soil Bed)',
       health: 'N/A (Fallow Soil)',
+      healthScore: null,
+      healthStatus: 'Fallow Soil',
+      healthColor: '#888888',
+      isEstimate: true,
+      targetMoisture: null,
+      dryThreshold: null,
       moistureNeed: 'Conservation Standby',
       irrigationZone: `Zone ${selectedRowId.replace('row-', '0')}`,
       stage: 'Unplanted / Fallow Furrow',
       isFallow: true,
     };
-  }, [selectedRowId, selectedPlot, cropInfo, stageInfo, weatherData, cropThresholds]);
+  }, [selectedRowId, selectedPlot, cropInfo, stageInfo, currentSoilMoisture]);
 
   // Transition Handlers
   const handleEnterFarm = useCallback(() => {
@@ -879,12 +919,12 @@ export function App() {
               </div>
               <div className="metric-pill-main">
                 <span className="metric-pill-val">
-                  {weatherData?.tempC !== null && weatherData?.tempC !== undefined
+                  {typeof weatherData?.tempC === 'number' && Number.isFinite(weatherData.tempC)
                     ? `${weatherData.tempC.toFixed(1)}°C`
                     : '--'}
                 </span>
                 <span className="metric-pill-sub">
-                  {weatherData?.tempF !== null && weatherData?.tempF !== undefined
+                  {typeof weatherData?.tempF === 'number' && Number.isFinite(weatherData.tempF)
                     ? `${weatherData.tempF.toFixed(1)}°F`
                     : ''}
                 </span>
@@ -902,9 +942,7 @@ export function App() {
               </div>
               <div className="metric-pill-main">
                 <span className="metric-pill-val">
-                  {weatherData?.precipitationRateMmH !== undefined
-                    ? `${weatherData.precipitationRateMmH.toFixed(1)} mm/h`
-                    : '0.0 mm/h'}
+                  {formatPrecipitationRate(weatherData?.precipitationRateMmH, 'Unavailable')}
                 </span>
                 <span className="metric-pill-sub">Precipitation</span>
               </div>
@@ -920,7 +958,7 @@ export function App() {
               </div>
               <div className="metric-pill-main">
                 <span className="metric-pill-val text-lime">
-                  {liveSoilMoistureCurrent
+                  {typeof liveSoilMoistureCurrent?.moisturePercent === 'number' && Number.isFinite(liveSoilMoistureCurrent.moisturePercent)
                     ? `${liveSoilMoistureCurrent.moisturePercent.toFixed(1)}%`
                     : '--'}
                 </span>
@@ -994,13 +1032,13 @@ export function App() {
                   <div className="weather-temp-info">
                     <div className="weather-temp-value">
                       <span className="temp-num">
-                        {weatherData.tempC !== null && weatherData.tempC !== undefined
+                        {typeof weatherData.tempC === 'number' && Number.isFinite(weatherData.tempC)
                           ? weatherData.tempC.toFixed(1)
                           : '--'}
                       </span>
                       <span className="temp-deg">°C</span>
                       <span className="temp-sub">
-                        ({weatherData.tempF !== null && weatherData.tempF !== undefined
+                        ({typeof weatherData.tempF === 'number' && Number.isFinite(weatherData.tempF)
                           ? `${weatherData.tempF.toFixed(0)}°F`
                           : '--'})
                       </span>
@@ -1015,9 +1053,7 @@ export function App() {
                       <CloudRain size={11} /> Rainfall
                     </span>
                     <span className="detail-val">
-                      {weatherData.precipitationRateMmH !== undefined && weatherData.precipitationRateMmH !== null
-                        ? `${weatherData.precipitationRateMmH.toFixed(1)} mm/h`
-                        : '0.0 mm/h'}
+                      {formatPrecipitationRate(weatherData.precipitationRateMmH, 'Unavailable')}
                     </span>
                   </div>
                   <div className="weather-detail-item">
@@ -1025,7 +1061,7 @@ export function App() {
                       <Wind size={11} /> Wind
                     </span>
                     <span className="detail-val">
-                      {weatherData.windSpeedKmH !== null && weatherData.windSpeedKmH !== undefined
+                      {typeof weatherData.windSpeedKmH === 'number' && Number.isFinite(weatherData.windSpeedKmH)
                         ? `${weatherData.windSpeedKmH.toFixed(1)} km/h${weatherData.windDirection ? ` • ${weatherData.windDirection}` : ''}`
                         : '--'}
                     </span>
@@ -1035,7 +1071,7 @@ export function App() {
                       Pressure
                     </span>
                     <span className="detail-val">
-                      {weatherData.atmosphericPressureHpa !== null && weatherData.atmosphericPressureHpa !== undefined
+                      {typeof weatherData.atmosphericPressureHpa === 'number' && Number.isFinite(weatherData.atmosphericPressureHpa)
                         ? `${Math.round(weatherData.atmosphericPressureHpa)} hPa`
                         : 'Unavailable'}
                     </span>
@@ -1064,6 +1100,8 @@ export function App() {
                   const plot = farmConfig.plots?.find((p) => p.rowId === rowId);
                   const crop = plot && SUPPORTED_CROPS[plot.cropType];
                   const stage = plot && GROWTH_STAGES[plot.growthStage];
+                  const plotThresholds = calculatePlotThresholds(plot);
+                  const plotHealth = estimateCropCanopyHealth(plot, currentSoilMoisture);
                   const isSelected = selectedRowId === rowId;
 
                   return (
@@ -1086,9 +1124,15 @@ export function App() {
                       </div>
                       <div className="furrow-card-footer">
                         <span className="furrow-soil-hint">
-                          {plot ? `Target: ${crop?.baseWaterNeedMmDay || 3.5} mm/d` : 'Moisture Retention'}
+                          {plot && plotThresholds.isSupported && plotThresholds.targetMoisture !== null
+                            ? `Target: ${plotThresholds.targetMoisture}% VWC`
+                            : 'Moisture Retention'}
                         </span>
-                        <span className={`furrow-status-dot ${plot ? 'active' : 'idle'}`}></span>
+                        <span
+                          className={`furrow-status-dot ${plot ? 'active' : 'idle'}`}
+                          style={plot && plotHealth.color ? { backgroundColor: plotHealth.color } : undefined}
+                          title={plot && plotHealth.score ? `Canopy Health: ${plotHealth.score}% (${plotHealth.status})` : undefined}
+                        ></span>
                       </div>
                     </button>
                   );
@@ -1281,7 +1325,7 @@ export function App() {
                         <div className="hud-stat-line">
                           <Thermometer size={14} className="text-amber" />
                           <span className="hud-stat-value">
-                            {weatherData?.tempC !== null && weatherData?.tempC !== undefined
+                            {typeof weatherData?.tempC === 'number' && Number.isFinite(weatherData.tempC)
                               ? `${weatherData.tempC.toFixed(1)}°C`
                               : '--'}
                           </span>
@@ -1616,15 +1660,20 @@ export function App() {
 
                   <div className="inspector-metric-row">
                     <span className="inspector-label">Canopy Health Score</span>
-                    <span className="inspector-val text-emerald font-semibold">
-                      {weatherData.simulation?.cropHealthScore || 95}% ({weatherData.simulation?.cropHealthStatus || 'Active Growth'})
+                    <span
+                      className="inspector-val text-emerald font-semibold"
+                      style={selectedPlotDetails?.healthColor ? { color: selectedPlotDetails.healthColor } : undefined}
+                    >
+                      {selectedPlotDetails ? selectedPlotDetails.health : 'N/A (Fallow Soil)'}
                     </span>
                   </div>
 
                   <div className="inspector-metric-row">
-                    <span className="inspector-label">Hydration Target</span>
+                    <span className="inspector-label">Target Soil Moisture</span>
                     <span className="inspector-val text-sky">
-                      {selectedPlotInfo ? `${selectedPlotInfo.crop?.baseWaterNeedMmDay || 3.5} mm/day` : 'Conservation'}
+                      {selectedPlotDetails && selectedPlotDetails.targetMoisture !== null
+                        ? `${selectedPlotDetails.targetMoisture}% VWC`
+                        : 'Conservation'}
                     </span>
                   </div>
 

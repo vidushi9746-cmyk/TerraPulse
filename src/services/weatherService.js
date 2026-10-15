@@ -81,6 +81,21 @@ export function degreesToCompass(degrees) {
 }
 
 /**
+ * Safely formats a precipitation rate value in mm/h.
+ * Returns formatted string like "0.0 mm/h" for valid numbers, or fallback ("Unavailable") for null/undefined/non-finite.
+ *
+ * @param {number|null|undefined} rate - Precipitation rate in mm/h
+ * @param {string} [fallback='Unavailable'] - Fallback label when rate is unavailable
+ * @returns {string} Formatted precipitation rate or fallback
+ */
+export function formatPrecipitationRate(rate, fallback = 'Unavailable') {
+  if (typeof rate === 'number' && Number.isFinite(rate)) {
+    return `${rate.toFixed(1)} mm/h`;
+  }
+  return fallback;
+}
+
+/**
  * Validates geographic coordinates.
  *
  * @param {number} latitude - Latitude in degrees (-90 to 90).

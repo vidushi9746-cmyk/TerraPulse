@@ -1,6 +1,6 @@
 import assert from 'node:assert';
 import { describe, it } from 'node:test';
-import { fetchCurrentWeather, degreesToCompass } from './weatherService.js';
+import { fetchCurrentWeather, degreesToCompass, formatPrecipitationRate } from './weatherService.js';
 import { fetchHourlyForecast } from './forecastService.js';
 import { compareIrrigation } from '../irrigationEngine.js';
 
@@ -42,6 +42,41 @@ describe('Environmental Data Integration & Normalization Test Suite', () => {
       assert.strictEqual(degreesToCompass('315'), null);
       assert.strictEqual(degreesToCompass(NaN), null);
       assert.strictEqual(degreesToCompass(Infinity), null);
+    });
+  });
+
+  // -------------------------------------------------------------
+  // SUITE 1B: formatPrecipitationRate Formatting Tests
+  // -------------------------------------------------------------
+  describe('formatPrecipitationRate Formatter', () => {
+    it('ENV-PRECIP-1: Formats valid positive numbers with one decimal place', () => {
+      assert.strictEqual(formatPrecipitationRate(2.54), '2.5 mm/h');
+      assert.strictEqual(formatPrecipitationRate(10), '10.0 mm/h');
+      assert.strictEqual(formatPrecipitationRate(0.12), '0.1 mm/h');
+    });
+
+    it('ENV-PRECIP-2: Preserves valid zero reading as "0.0 mm/h" (not fallback)', () => {
+      assert.strictEqual(formatPrecipitationRate(0), '0.0 mm/h');
+      assert.strictEqual(formatPrecipitationRate(0.0), '0.0 mm/h');
+    });
+
+    it('ENV-PRECIP-3: Returns fallback for null and undefined without calling toFixed', () => {
+      assert.strictEqual(formatPrecipitationRate(null), 'Unavailable');
+      assert.strictEqual(formatPrecipitationRate(undefined), 'Unavailable');
+    });
+
+    it('ENV-PRECIP-4: Returns fallback for non-finite and invalid inputs safely', () => {
+      assert.strictEqual(formatPrecipitationRate(NaN), 'Unavailable');
+      assert.strictEqual(formatPrecipitationRate(Infinity), 'Unavailable');
+      assert.strictEqual(formatPrecipitationRate(-Infinity), 'Unavailable');
+      assert.strictEqual(formatPrecipitationRate('5.0'), 'Unavailable');
+      assert.strictEqual(formatPrecipitationRate({}), 'Unavailable');
+    });
+
+    it('ENV-PRECIP-5: Supports custom fallback strings such as "N/A" and "--"', () => {
+      assert.strictEqual(formatPrecipitationRate(null, 'N/A'), 'N/A');
+      assert.strictEqual(formatPrecipitationRate(undefined, '--'), '--');
+      assert.strictEqual(formatPrecipitationRate(NaN, 'Data Missing'), 'Data Missing');
     });
   });
 
