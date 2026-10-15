@@ -190,9 +190,10 @@ export function App() {
       setLiveWeather(currentData);
       setHourlyForecast(forecastData);
     } catch (err) {
-      console.warn('Weather service failure; using resilient fallback:', err.message);
+      console.warn('Weather service failure; preserving current telemetry:', err.message);
       setWeatherError(err.message || 'Unable to connect to live Open-Meteo telemetry');
-      setLiveWeather({
+      // Preserve existing live weather state if available rather than clearing to clear-sky
+      setLiveWeather((prev) => prev || {
         temperature: 22.4,
         humidity: 48,
         windSpeed: 11.2,
@@ -222,6 +223,15 @@ export function App() {
       active = false;
     };
   }, [selectedLocation.latitude, selectedLocation.longitude, loadLiveWeatherData]);
+
+  // Periodic background refresh for live weather (every 60s for continuous sync)
+  useEffect(() => {
+    if (selectedScenario !== 'live') return;
+    const refreshTimer = setInterval(() => {
+      loadLiveWeatherData(selectedLocation.latitude, selectedLocation.longitude);
+    }, 60000);
+    return () => clearInterval(refreshTimer);
+  }, [selectedScenario, selectedLocation.latitude, selectedLocation.longitude, loadLiveWeatherData]);
 
   // Simulation Playback Timer Loop (Advances hours with speed multiplier)
   useEffect(() => {
@@ -282,27 +292,23 @@ export function App() {
         };
       }
       if (selectedScenario === 'rainy') {
-        const rainProfile = [1.5, 2.0, 2.0, 1.5, 1.0, 0.0];
-        const precip = hourOffset < rainProfile.length ? rainProfile[hourOffset] : 0.0;
         return {
           tempC: 16.0 + Math.sin(hourOffset * 0.26) * 2,
           humidity: 86,
           windSpeed: 14.0,
-          precipitation: precip,
-          weatherCode: precip > 0 ? 61 : 3,
-          weatherState: precip > 0 ? 'Slight rain' : 'Overcast',
+          precipitation: 2.4,
+          weatherCode: 63,
+          weatherState: 'Moderate rain',
         };
       }
       if (selectedScenario === 'heavy-rain') {
-        const heavyRainProfile = [4.0, 5.0, 6.0, 4.0, 3.0, 2.0];
-        const precip = hourOffset < heavyRainProfile.length ? heavyRainProfile[hourOffset] : 0.5;
         return {
           tempC: 14.5 + Math.sin(hourOffset * 0.26) * 2,
           humidity: 94,
           windSpeed: 24.0,
-          precipitation: precip,
-          weatherCode: precip >= 4 ? 65 : 63,
-          weatherState: precip >= 4 ? 'Heavy rain' : 'Moderate rain',
+          precipitation: 5.2,
+          weatherCode: 65,
+          weatherState: 'Heavy rain',
         };
       }
 
@@ -453,17 +459,71 @@ export function App() {
     const weatherCode = stepWeather.weatherCode;
     const weatherState = stepWeather.weatherState;
 
-    const isRain = precipitation > 0 || (weatherCode >= 50 && weatherCode <= 67);
-    const isCloudy = !isRain && (weatherCode === 2 || weatherCode === 3 || weatherCode === 45 || selectedScenario === 'cloudy');
+    const isThunderstorm =
+      weatherCode === 95 ||
+      weatherCode === 96 ||
+      weatherCode === 99 ||
+      weatherState.toLowerCase().includes('thunder');
+
+    const isHeavyRain =
+      !isThunderstorm &&
+      (weatherCode === 65 ||
+        weatherCode === 67 ||
+        weatherCode === 82 ||
+        (typeof precipitation === 'number' && precipitation >= 4.0) ||
+        selectedScenario === 'heavy-rain');
+
+    const isDrizzle =
+      !isThunderstorm &&
+      !isHeavyRain &&
+      ((weatherCode >= 51 && weatherCode <= 57) ||
+        (typeof precipitation === 'number' && precipitation > 0 && precipitation < 1.0) ||
+        weatherState.toLowerCase().includes('drizzle'));
+
+    const isModerateRain =
+      !isThunderstorm &&
+      !isHeavyRain &&
+      !isDrizzle &&
+      ((weatherCode >= 61 && weatherCode <= 64) ||
+        weatherCode === 66 ||
+        weatherCode === 80 ||
+        weatherCode === 81 ||
+        (typeof precipitation === 'number' && precipitation >= 1.0) ||
+        selectedScenario === 'rainy');
+
+    const hasPrecipitation = isThunderstorm || isHeavyRain || isDrizzle || isModerateRain;
+
+    const precipitationType = isThunderstorm
+      ? 'thunderstorm'
+      : isHeavyRain
+      ? 'heavy_rain'
+      : isDrizzle
+      ? 'drizzle'
+      : isModerateRain
+      ? 'rain'
+      : 'none';
+
+    const isCloudy =
+      !hasPrecipitation &&
+      (weatherCode === 2 ||
+        weatherCode === 3 ||
+        weatherCode === 45 ||
+        weatherCode === 48 ||
+        selectedScenario === 'cloudy' ||
+        weatherState.toLowerCase().includes('cloud') ||
+        weatherState.toLowerCase().includes('overcast') ||
+        weatherState.toLowerCase().includes('fog'));
+
+    const isSunny = !hasPrecipitation && !isCloudy;
 
     const baseScene =
-      (isRain
+      (hasPrecipitation
         ? MOCK_WEATHER_DATA.rainy?.scene
         : isCloudy
         ? MOCK_WEATHER_DATA.cloudy?.scene
         : MOCK_WEATHER_DATA.sunny?.scene) || MOCK_WEATHER_DATA.sunny.scene;
 
-    const solarIrradiance = isRain ? 220 : isCloudy ? 340 : 780;
+    const solarIrradiance = hasPrecipitation ? 220 : isCloudy ? 340 : 780;
     const dewPointC = Number((tempC - (100 - humidity) / 5).toFixed(1));
 
     // Dynamic agronomic indicators derived from simulated soil moisture
@@ -520,7 +580,7 @@ export function App() {
     const waterPreservedTodayGal = Math.round(waterSavedMm * farmAreaSqm * 0.264172);
 
     return {
-      id: isRain ? 'rainy' : isCloudy ? 'cloudy' : 'sunny',
+      id: hasPrecipitation ? 'rainy' : isCloudy ? 'cloudy' : 'sunny',
       name: weatherState,
       tagline:
         selectedScenario === 'live'
@@ -534,8 +594,8 @@ export function App() {
       windDirection: 'NW',
       precipitationRateMmH: precipitation,
       solarIrradianceWm2: solarIrradiance,
-      uvIndex: isRain ? 1 : isCloudy ? 3 : 7,
-      uvRating: isRain ? 'Low' : isCloudy ? 'Moderate' : 'High',
+      uvIndex: hasPrecipitation ? 1 : isCloudy ? 3 : 7,
+      uvRating: hasPrecipitation ? 'Low' : isCloudy ? 'Moderate' : 'High',
       atmosphericPressureHpa: 1013,
       dewPointC,
       dataMode: selectedScenario === 'live' ? 'live' : 'what-if',
@@ -564,13 +624,30 @@ export function App() {
         isSimulatedModel: true,
       },
 
-      // 3D Scene config with dynamic wind speed, atmospheric depth, and soil wetness derived from soil moisture
+      // 3D Scene config with continuous multi-intensity precipitation synchronization
       scene: {
         ...baseScene,
+        rainActive: hasPrecipitation,
+        hasPrecipitation,
+        precipitationType,
+        precipitationRate: precipitation,
+        weatherCode,
+        weatherState,
+        isCloudy,
+        isSunny,
+        isDrizzle,
+        isHeavyRain,
+        isThunderstorm,
         soilWetness: Math.min(0.95, Math.max(0.08, currentSoilMoisture / 100)),
-        cloudCount: isRain ? 12 : isCloudy ? 9 : 4,
-        fogNear: 35,
-        fogFar: 145,
+        cloudCount: isThunderstorm ? 12 : isHeavyRain ? 11 : isModerateRain ? 9 : isDrizzle ? 8 : isCloudy ? 7 : 4,
+        cloudColor: isThunderstorm ? '#64748b' : hasPrecipitation ? '#cbd5e1' : '#ffffff',
+        skyColor: isThunderstorm ? '#334155' : hasPrecipitation ? '#64748b' : isCloudy ? '#8da4be' : '#5fa8e8',
+        fogColor: isThunderstorm ? '#475569' : hasPrecipitation ? '#788e9f' : isCloudy ? '#9bb0c4' : '#b0d4f1',
+        fogNear: hasPrecipitation ? 35 : isCloudy ? 45 : 60,
+        fogFar: hasPrecipitation ? 190 : isCloudy ? 220 : 280,
+        sunIntensity: isThunderstorm ? 0.7 : hasPrecipitation ? 1.4 : isCloudy ? 1.8 : 2.8,
+        sunColor: hasPrecipitation ? '#e2e8f0' : isCloudy ? '#fef3c7' : '#fff7db',
+        ambientIntensity: hasPrecipitation ? 0.65 : isCloudy ? 0.75 : 0.82,
       },
     };
   }, [
