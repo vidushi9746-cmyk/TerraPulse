@@ -381,13 +381,13 @@ export function FarmConfigModal({
                             return (
                               <option key={row} value={row} disabled={isTakenByOther}>
                                 {row === 'row-1'
-                                  ? 'Furrow Row 1 (North Berm)'
+                                  ? 'Row 1 (North)'
                                   : row === 'row-2'
-                                  ? 'Furrow Row 2 (Mid-North)'
+                                  ? 'Row 2 (Mid-North)'
                                   : row === 'row-3'
-                                  ? 'Furrow Row 3 (Mid-South)'
-                                  : 'Furrow Row 4 (South Berm)'}
-                                {isTakenByOther ? ' (Assigned)' : ''}
+                                  ? 'Row 3 (Mid-South)'
+                                  : 'Row 4 (South)'}
+                                {isTakenByOther ? ' — Assigned' : ''}
                               </option>
                             );
                           })}
@@ -404,7 +404,7 @@ export function FarmConfigModal({
                         >
                           {Object.values(SUPPORTED_CROPS).map((c) => (
                             <option key={c.id} value={c.id}>
-                              {c.icon} {c.name} ({c.category})
+                              {c.icon} {c.name}
                             </option>
                           ))}
                         </select>
@@ -436,7 +436,7 @@ export function FarmConfigModal({
                           className="field-select"
                         >
                           {Object.values(GROWTH_STAGES).map((st) => (
-                            <option key={st.id} value={st.id}>
+                            <option key={st.id} value={st.id} title={st.description}>
                               {st.label}
                             </option>
                           ))}

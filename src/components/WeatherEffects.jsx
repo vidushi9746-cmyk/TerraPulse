@@ -30,40 +30,47 @@ for (let i = 0; i < MOTE_COUNT; i++) {
 }
 
 const STATIC_CLOUD_DATA = [];
-for (let i = 0; i < 14; i++) {
+for (let i = 0; i < 12; i++) {
   STATIC_CLOUD_DATA.push({
-    baseX: (Math.random() - 0.5) * 60,
-    baseY: 13.0 + Math.random() * 5.0,
-    baseZ: (Math.random() - 0.5) * 60,
-    scale: 1.1 + Math.random() * 1.1,
-    baseSpeed: 0.28 + Math.random() * 0.3,
+    baseX: (Math.random() - 0.5) * 160,
+    baseY: 42.0 + Math.random() * 16.0,
+    baseZ: (Math.random() - 0.5) * 130 - 20,
+    scale: 1.4 + Math.random() * 1.2,
+    baseSpeed: 0.35 + Math.random() * 0.35,
   });
 }
 
-// Realistic soft cumulus cloud cluster
+// Natural soft cumulus cloud cluster with realistic flat base
 const CUMULUS_PUFFS = [
-  { offset: [0, 0, 0], radius: 1.6 },
-  { offset: [1.4, -0.2, 0.3], radius: 1.3 },
-  { offset: [-1.3, -0.2, -0.2], radius: 1.35 },
-  { offset: [0.5, 0.7, -0.2], radius: 1.2 },
-  { offset: [-0.6, 0.6, 0.3], radius: 1.15 },
-  { offset: [0.2, -0.3, 1.0], radius: 1.05 },
-  { offset: [-0.3, -0.2, -1.0], radius: 1.0 },
+  { offset: [0, 0, 0], radius: 2.2, scale: [1.8, 0.65, 1.4] },
+  { offset: [2.0, 0.2, 0.2], radius: 1.8, scale: [1.6, 0.65, 1.3] },
+  { offset: [-1.9, 0.1, -0.2], radius: 1.85, scale: [1.6, 0.65, 1.3] },
+  { offset: [0.6, 0.7, -0.2], radius: 1.6, scale: [1.4, 0.75, 1.2] },
+  { offset: [-0.8, 0.6, 0.3], radius: 1.5, scale: [1.3, 0.75, 1.2] },
+  { offset: [0.2, -0.2, 1.4], radius: 1.5, scale: [1.5, 0.55, 1.2] },
+  { offset: [-0.4, -0.2, -1.4], radius: 1.4, scale: [1.4, 0.55, 1.2] },
 ];
 
-function SoftCumulusCloud({ position, scale = 1, color = '#ffffff', opacity = 0.9 }) {
+function SoftCumulusCloud({ position, scale = 1, color = '#ffffff', opacity = 0.75 }) {
   return (
     <group position={position} scale={scale}>
       {CUMULUS_PUFFS.map((p, idx) => (
-        <mesh key={idx} position={p.offset} castShadow={false} receiveShadow={false}>
-          <sphereGeometry args={[p.radius, 12, 10]} />
+        <mesh
+          key={idx}
+          position={p.offset}
+          scale={p.scale}
+          castShadow={false}
+          receiveShadow={false}
+        >
+          <sphereGeometry args={[p.radius, 10, 8]} />
           <meshStandardMaterial
             color={color}
-            roughness={0.95}
+            roughness={0.98}
             metalness={0.0}
             flatShading={false}
             transparent
             opacity={opacity}
+            depthWrite={false}
           />
         </mesh>
       ))}
@@ -71,7 +78,7 @@ function SoftCumulusCloud({ position, scale = 1, color = '#ffffff', opacity = 0.
   );
 }
 
-function DriftingClouds({ count = 6, color = '#ffffff', opacity = 0.85, speedMultiplier = 1 }) {
+function DriftingClouds({ count = 6, color = '#ffffff', opacity = 0.72, speedMultiplier = 1 }) {
   const cloudsRef = useRef();
 
   useFrame((_, delta) => {
@@ -82,8 +89,8 @@ function DriftingClouds({ count = 6, color = '#ffffff', opacity = 0.85, speedMul
       const data = STATIC_CLOUD_DATA[i];
       if (child && data) {
         child.position.x += data.baseSpeed * speedMultiplier * delta;
-        if (child.position.x > 38) {
-          child.position.x = -38;
+        if (child.position.x > 85) {
+          child.position.x = -85;
         }
       }
     }
@@ -331,11 +338,11 @@ export function WeatherEffects({ sceneConfig, windSpeed = 10 }) {
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
         shadow-camera-near={1}
-        shadow-camera-far={130}
-        shadow-camera-top={45}
-        shadow-camera-bottom={-45}
-        shadow-camera-left={-45}
-        shadow-camera-right={45}
+        shadow-camera-far={150}
+        shadow-camera-top={50}
+        shadow-camera-bottom={-50}
+        shadow-camera-left={-50}
+        shadow-camera-right={50}
         shadow-bias={-0.0003}
       />
 
@@ -369,3 +376,4 @@ export function WeatherEffects({ sceneConfig, windSpeed = 10 }) {
     </>
   );
 }
+
