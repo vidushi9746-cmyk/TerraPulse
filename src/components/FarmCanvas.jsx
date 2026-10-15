@@ -235,3 +235,5 @@ export function FarmCanvas({
     </div>
   );
 }
+
+export default FarmCanvas;

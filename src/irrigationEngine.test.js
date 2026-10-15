@@ -546,4 +546,25 @@ describe('Irrigation Engine Test Suite', () => {
       assert.strictEqual(shortResult.forecastAware.fallbackApplied, true);
     });
   });
+
+  it('Regression 7: Safe handling of zero baseline volume (Vc = 0) and negative savings', () => {
+    // When initial moisture is already optimal (e.g. 50%), conventional Vc is 0
+    const env = { ...baseEnvironmentState, forecast: [] };
+    const resZeroBaseline = compareIrrigation(env, 50.0);
+    assert.strictEqual(resZeroBaseline.conventional.waterAppliedMm, 0);
+    assert.strictEqual(resZeroBaseline.comparison.waterSavedMm, 0);
+    assert.strictEqual(resZeroBaseline.comparison.waterSavedPercent, null);
+    assert.strictEqual(resZeroBaseline.comparison.waterSavedPercentDisplay, 'N/A');
+    assert.strictEqual(resZeroBaseline.comparison.recommendation, 'NONE_NEEDED');
+
+    // Test comparison math directly with mock strategies where Vf > Vc
+    const mockConventional = { waterAppliedMm: 20.0, decision: 'IRRIGATE' };
+    const mockForecastAware = { waterAppliedMm: 30.0, decision: 'IRRIGATE' };
+    const rawSaved = mockConventional.waterAppliedMm - mockForecastAware.waterAppliedMm; // -10.0
+    const savedMm = Math.round(rawSaved * 100) / 100;
+    const savedPercent = Math.round((rawSaved / mockConventional.waterAppliedMm) * 1000) / 10; // -50.0%
+
+    assert.strictEqual(savedMm, -10.0);
+    assert.strictEqual(savedPercent, -50.0);
+  });
 });

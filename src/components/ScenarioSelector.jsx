@@ -23,7 +23,7 @@ const scenarios = [
   {
     id: 'rainy',
     name: 'Rain Expected',
-    description: 'Significant rain expected (8 mm); triggers predictive deferral.',
+    description: 'Significant rain expected (14.4 mm over 6 hours); triggers predictive deferral.',
     icon: CloudRain,
   },
 ];

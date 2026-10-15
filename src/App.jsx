@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo, lazy, Suspense } from 'react';
 import { MOCK_WEATHER_DATA } from './data/mockWeather';
 import { fetchCurrentWeather, degreesToCompass, formatPrecipitationRate } from './services/weatherService';
 import { fetchHourlyForecast } from './services/forecastService';
@@ -16,7 +16,6 @@ import {
 } from './data/cropConfig';
 import { LandingPage } from './components/LandingPage';
 import { DashboardHeader } from './components/DashboardHeader';
-import { FarmCanvas } from './components/FarmCanvas';
 import { WeatherSelector } from './components/WeatherSelector';
 import { WeatherMetrics } from './components/WeatherMetrics';
 import { FarmStatus } from './components/FarmStatus';
@@ -65,6 +64,26 @@ const DEFAULT_LOCATION = {
 
 // Simulation baseline soil moisture percentage
 const BASELINE_SOIL_MOISTURE = 34.0;
+
+// Lazy load FarmCanvas to keep 3D Three.js bundle out of initial page load
+const FarmCanvas = lazy(() =>
+  import('./components/FarmCanvas').then((module) => ({
+    default: module.FarmCanvas,
+  }))
+);
+
+function FarmCanvasFallback() {
+  return (
+    <div className="canvas-wrapper" role="status" aria-live="polite">
+      <div className="canvas-loading-overlay">
+        <div className="sprout-loading-wrap">
+          <Sprout className="sprout-loading-icon text-lime" size={30} />
+        </div>
+        <p className="loader-text">Loading Living Agricultural Twin...</p>
+      </div>
+    </div>
+  );
+}
 
 
 export function App() {
@@ -444,10 +463,9 @@ export function App() {
 
   // 6-hour future forecast slice from active simulation point
   const activeForecastSlice = useMemo(() => {
-    // If in live mode and hourly forecast is not loaded/available, pass empty array
-    // so irrigation engine correctly flags UNAVAILABLE rather than hallucinating intervals
+    // If live scenario and no hourlyForecast data is available, do not synthesize fake intervals
     if (selectedScenario === 'live' && (!hourlyForecast || hourlyForecast.length === 0)) {
-      return [];
+      return null;
     }
 
     const intervals = [];
@@ -673,7 +691,8 @@ export function App() {
 
     // Litres conserved over configured farm parcel area: litres = mm × farmAreaSqm
     const waterSavedMm = comparisonResult?.comparison?.waterSavedMm || 0;
-    const waterPreservedTodayGal = Math.round(waterSavedMm * farmAreaSqm * 0.264172);
+    const waterSavedLitres = Math.round(waterSavedMm * farmAreaSqm);
+    const waterPreservedTodayGal = Math.round(waterSavedLitres * 0.264172);
 
     return {
       id: hasPrecipitation ? 'rainy' : isCloudy ? 'cloudy' : 'sunny',
@@ -727,6 +746,7 @@ export function App() {
         irrigationAction,
         irrigationActionColor,
         irrigationRecommendation,
+        waterPreservedTodayL: waterSavedLitres,
         waterPreservedTodayGal,
         activeZones: `${farmConfig.plots.length} / 4 Furrows Cultivated`,
         isSimulatedModel: true,
@@ -1532,15 +1552,17 @@ export function App() {
 
               {/* FARM CANVAS CARD */}
               <div className="farm-canvas-card">
-                <FarmCanvas
-                  weatherData={weatherData}
-                  selectedRowId={selectedRowId}
-                  onSelectRow={setSelectedRowId}
-                  isIrrigating={manualIrrigationTriggered}
-                  farmConfig={farmConfig}
-                  cameraPreset={cameraPreset}
-                  onPresetChange={setCameraPreset}
-                />
+                <Suspense fallback={<FarmCanvasFallback />}>
+                  <FarmCanvas
+                    weatherData={weatherData}
+                    selectedRowId={selectedRowId}
+                    onSelectRow={setSelectedRowId}
+                    isIrrigating={manualIrrigationTriggered}
+                    farmConfig={farmConfig}
+                    cameraPreset={cameraPreset}
+                    onPresetChange={setCameraPreset}
+                  />
+                </Suspense>
 
                 {/* EMBEDDED BOTTOM CONTROLS BAR (Shown when NOT fullscreen) */}
                 {!isFullscreen && (
@@ -1769,7 +1791,7 @@ export function App() {
                       (selectedScenario === 'sunny'
                         ? 0
                         : selectedScenario === 'rainy'
-                        ? 8.0
+                        ? 14.4
                         : selectedScenario === 'heavy-rain'
                         ? 24.0
                         : null)
@@ -1780,7 +1802,7 @@ export function App() {
                         : `What-If: ${selectedScenario === 'sunny'
                           ? 'Sunny Day (0 mm rain)'
                           : selectedScenario === 'rainy'
-                            ? 'Rain Expected (8 mm rain)'
+                            ? 'Rain Expected (14.4 mm over 6 hours)'
                             : 'Heavy Rain (24 mm rain)'
                         }`
                     }
