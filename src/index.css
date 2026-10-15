@@ -1,49 +1,49 @@
 :root {
   /* ==========================================================================
-     TerraPulse Agriculture — Warm Ivory + Cinematic Farmland Palette
-     - Warm ivory: #F5F0E6 (Dominant interface background & surface)
-     - Soft cream: #EAE2D2 (Cards, secondary containers, elevated panels)
-     - Deep pine: #243B2E (Compact navigation bar, primary buttons, accents)
-     - Muted sage: #879C7A (Borders, secondary tags, chart fills)
-     - Soft sage accent: #B8CBA8 (Highlights, active badges, status pills)
-     - Earthy brown: #A98562 (Warm soil/land details, natural warmth)
-     - Primary text: #263329 (High-contrast deep forest on ivory)
-     - Secondary text: #6F786D (Comfortable readable muted text)
+     TerraPulse Agriculture — Forest Green + Warm Ivory Theme
+     - Primary green: #183D2B (Deep forest green: header, primary buttons, brand accents)
+     - Secondary green: #527653 (Natural muted green: secondary elements, borders, icons)
+     - Highlight: #B7C96B (Soft olive-lime: selected states, key badges, status pills)
+     - Light surfaces: #F6F3E9 (Warm ivory: app background, elevated cards)
+     - Soft cream: #EDE8DB (Secondary container surfaces, light border accents)
+     - Text primary: #292E27 (Dark earthy charcoal for high contrast readable text)
+     - Text secondary: #596155 (Subtle readable earthy text)
      ========================================================================== */
 
-  /* Exact Color Tokens */
-  --warm-ivory: #F5F0E6;
-  --soft-cream: #EAE2D2;
-  --deep-pine: #243B2E;
-  --muted-sage: #879C7A;
-  --soft-sage: #B8CBA8;
-  --earthy-brown: #A98562;
-  --primary-text: #263329;
-  --secondary-text: #6F786D;
+  /* Exact Color Tokens - Synchronized with TerraPulse Theme */
+  --warm-ivory: #F4EFE4;
+  --soft-cream: #EAE3D2;
+  --deep-pine: #143524;
+  --secondary-green: #4A6D4B;
+  --muted-sage: #4A6D4B;
+  --soft-sage: #B7C96B;
+  --earthy-brown: #9E7A57;
+  --primary-text: #222920;
+  --secondary-text: #4F584B;
 
-  /* Surfaces (Warm Ivory & Soft Cream dominate) */
-  --bg-app: #F5F0E6;              /* Main background */
-  --bg-surface: #FFFFFF;          /* Pure card surface on warm ivory */
-  --bg-surface-cream: #EAE2D2;    /* Soft cream container surface */
-  --bg-surface-elevated: #FAF6EE; /* Light warm ivory card surface */
-  --bg-surface-subtle: #F0EAE0;   /* Muted warm surface */
-  --bg-hover: #E4DBD0;            /* Subtle warm hover */
-  --bg-nav: #243B2E;              /* Deep Pine for top navigation */
+  /* Surfaces (Warm Ivory, Soft Sage & Earthy Cream tones) */
+  --bg-app: #F2EDE2;              /* Noticeably warm, earthy backdrop */
+  --bg-surface: #FAF5EB;          /* Warm earthy ivory card surface */
+  --bg-surface-cream: #EAE3D2;    /* Soft cream container surface */
+  --bg-surface-elevated: #FDF9F0; /* Light warm ivory elevated card surface */
+  --bg-surface-subtle: #E5DFCE;   /* Muted warm surface */
+  --bg-hover: #DFD7C6;            /* Subtle warm hover */
+  --bg-nav: #143524;              /* Deep Forest Green for top navigation */
 
   /* Primary Brand Palettes */
-  --pine: #243B2E;
-  --pine-light: #2E4939;
-  --pine-dark: #1A2C22;
-  --sage: #879C7A;
-  --sage-light: #9BB08E;
-  --sage-dim: rgba(135, 156, 122, 0.18);
-  --sage-border: rgba(135, 156, 122, 0.4);
+  --pine: #143524;
+  --pine-light: #1F4C33;
+  --pine-dark: #0D2418;
+  --sage: #4A6D4B;
+  --sage-light: #5F8760;
+  --sage-dim: rgba(74, 109, 75, 0.16);
+  --sage-border: rgba(74, 109, 75, 0.35);
 
   /* Highlights & Accents */
-  --highlight: #879C7A;           /* Muted sage */
-  --highlight-soft: #B8CBA8;      /* Soft sage accent */
-  --highlight-dim: rgba(184, 203, 168, 0.22);
-  --highlight-border: rgba(135, 156, 122, 0.45);
+  --highlight: #B7C96B;           /* Soft olive-lime */
+  --highlight-soft: #C6D686;      /* Soft lime accent */
+  --highlight-dim: rgba(183, 201, 107, 0.22);
+  --highlight-border: rgba(183, 201, 107, 0.45);
 
   /* Earthy Warmth */
   --earth: #A98562;
@@ -64,17 +64,17 @@
   --sky-border: rgba(74, 142, 168, 0.35);
 
   /* Typography Colors */
-  --text-primary: #263329;        /* Primary high-contrast text on ivory */
-  --text-secondary: #6F786D;      /* Secondary muted readable text */
-  --text-muted: #8E998B;          /* Darker muted caption / metadata */
-  --text-on-dark: #F5F0E6;        /* Warm ivory text on deep pine surfaces */
-  --text-inverse: #F5F0E6;
+  --text-primary: #292E27;        /* Dark earthy charcoal on ivory */
+  --text-secondary: #596155;      /* Secondary muted readable text */
+  --text-muted: #7E877A;          /* Muted caption / metadata */
+  --text-on-dark: #F6F3E9;        /* Warm ivory text on deep forest surfaces */
+  --text-inverse: #F6F3E9;
 
   /* Subtle Warm Sage Borders */
-  --border-subtle: rgba(135, 156, 122, 0.28);
-  --border-medium: rgba(135, 156, 122, 0.45);
-  --border-accent: rgba(36, 59, 46, 0.2);
-  --border-active: #879C7A;
+  --border-subtle: rgba(82, 118, 83, 0.22);
+  --border-medium: rgba(82, 118, 83, 0.38);
+  --border-accent: rgba(24, 61, 43, 0.22);
+  --border-active: #527653;
 
   /* Typography */
   --font-display: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
