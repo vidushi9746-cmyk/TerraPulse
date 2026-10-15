@@ -636,9 +636,11 @@ function App() {
               </div>
               <div className="metric-pill-main">
                 <span className="metric-pill-val text-lime">
-                  {weatherData?.simulation?.soilMoisturePercent ?? 34}%
+                  {typeof currentSoilMoisture === 'number'
+                    ? currentSoilMoisture.toFixed(2)
+                    : 'N/A'}%
                 </span>
-                <span className="metric-pill-sub">Volumetric</span>
+                <span className="metric-pill-sub">Simulated moisture</span>
               </div>
               <div className="metric-pill-badge">
                 <span>{weatherData?.simulation?.soilMoistureStatus || 'Optimal Range'}</span>
