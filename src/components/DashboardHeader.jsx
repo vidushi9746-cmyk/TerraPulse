@@ -11,7 +11,6 @@ import {
   Sun,
   Cloud,
   CloudRain,
-  CloudLightning,
   Check,
   Sparkles,
 } from 'lucide-react';
@@ -39,7 +38,7 @@ const SCENARIO_OPTIONS = [
   },
   {
     id: 'cloudy',
-    name: 'What-If: Cloudy / Overcast',
+    name: 'What-If: Cloudy Day',
     shortName: 'What-If: Cloudy',
     badge: '0.0 mm Rain',
     badgeClass: 'badge-cloudy',
@@ -57,16 +56,6 @@ const SCENARIO_OPTIONS = [
     icon: CloudRain,
     isLive: false,
   },
-  {
-    id: 'heavy-rain',
-    name: 'What-If: Heavy Rain',
-    shortName: 'What-If: Heavy Rain',
-    badge: '24.0 mm Storm',
-    badgeClass: 'badge-storm',
-    desc: '24 mm downpour; tests soil saturation and maximum water savings',
-    icon: CloudLightning,
-    isLive: false,
-  },
 ];
 
 export function DashboardHeader({
@@ -75,7 +64,6 @@ export function DashboardHeader({
   isLeftPanelOpen = true,
   onToggleLeftPanel,
   onOpenLocationSearch,
-  weatherData,
   farmConfig,
   onOpenFarmConfig,
   selectedScenario = 'live',
@@ -84,7 +72,7 @@ export function DashboardHeader({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
-  const isLive = selectedScenario === 'live' || weatherData?.dataMode === 'live';
+  const isLive = selectedScenario === 'live';
 
   // Find active option details
   const activeScenario = SCENARIO_OPTIONS.find((s) => s.id === selectedScenario) || SCENARIO_OPTIONS[0];
@@ -250,7 +238,7 @@ export function DashboardHeader({
             aria-haspopup="true"
             aria-label="Atmospheric mode selector"
           >
-            <div className={`pulse-indicator ${isLive ? 'live-mode' : 'demo-mode'}`}>
+            <div className={`pulse-indicator ${isLive ? 'live-mode' : 'whatif-mode'}`}>
               <span className="ping-dot"></span>
               <span className="core-dot"></span>
             </div>

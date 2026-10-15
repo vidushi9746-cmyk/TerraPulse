@@ -6,7 +6,7 @@
 .add-crop-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 10050;
   background: rgba(36, 59, 46, 0.48);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);

@@ -97,7 +97,7 @@ export async function fetchHourlyForecast(latitude, longitude, days = 3) {
   url.searchParams.set('longitude', longitude.toString());
   url.searchParams.set(
     'hourly',
-    'temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation,weather_code'
+    'temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m,surface_pressure,precipitation,weather_code,shortwave_radiation,soil_temperature_6cm'
   );
   url.searchParams.set('forecast_days', days.toString());
   url.searchParams.set('timezone', 'UTC');
@@ -180,6 +180,27 @@ export async function fetchHourlyForecast(latitude, longitude, days = 3) {
     }
   }
 
+  // Validate optional extended meteorological fields if present in response
+  const extendedFields = [
+    'wind_direction_10m',
+    'surface_pressure',
+    'shortwave_radiation',
+    'soil_temperature_6cm',
+  ];
+
+  for (const field of extendedFields) {
+    if (hourly[field] !== undefined) {
+      if (!Array.isArray(hourly[field])) {
+        throw new Error(`Malformed response: Extended hourly field "${field}" must be an array.`);
+      }
+      if (hourly[field].length !== entryCount) {
+        throw new Error(
+          `Malformed response: Mismatched array length for hourly field "${field}" (expected ${entryCount}, received ${hourly[field].length}).`
+        );
+      }
+    }
+  }
+
   const results = [];
   for (let i = 0; i < entryCount; i += 1) {
     const timestamp = toIsoUtcTimestamp(hourly.time[i]);
@@ -199,6 +220,34 @@ export async function fetchHourlyForecast(latitude, longitude, days = 3) {
         ? hourly.wind_speed_10m[i]
         : null;
 
+    const windDirection =
+      Array.isArray(hourly.wind_direction_10m) &&
+      typeof hourly.wind_direction_10m[i] === 'number' &&
+      Number.isFinite(hourly.wind_direction_10m[i])
+        ? hourly.wind_direction_10m[i]
+        : null;
+
+    const pressure =
+      Array.isArray(hourly.surface_pressure) &&
+      typeof hourly.surface_pressure[i] === 'number' &&
+      Number.isFinite(hourly.surface_pressure[i])
+        ? hourly.surface_pressure[i]
+        : null;
+
+    const solarRadiation =
+      Array.isArray(hourly.shortwave_radiation) &&
+      typeof hourly.shortwave_radiation[i] === 'number' &&
+      Number.isFinite(hourly.shortwave_radiation[i])
+        ? hourly.shortwave_radiation[i]
+        : null;
+
+    const soilTemperature =
+      Array.isArray(hourly.soil_temperature_6cm) &&
+      typeof hourly.soil_temperature_6cm[i] === 'number' &&
+      Number.isFinite(hourly.soil_temperature_6cm[i])
+        ? hourly.soil_temperature_6cm[i]
+        : null;
+
     const precipitation =
       typeof hourly.precipitation[i] === 'number' && Number.isFinite(hourly.precipitation[i])
         ? hourly.precipitation[i]
@@ -216,6 +265,10 @@ export async function fetchHourlyForecast(latitude, longitude, days = 3) {
       temperature,
       humidity,
       windSpeed,
+      windDirection,
+      pressure,
+      solarRadiation,
+      soilTemperature,
       precipitation,
       weatherCode,
       weatherState,

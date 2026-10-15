@@ -6,7 +6,7 @@
 .farm-config-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 10050;
   background: rgba(36, 59, 46, 0.45);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -346,14 +346,14 @@
   gap: 12px 14px;
 }
 
-@media (min-width: 680px) {
+@media (min-width: 740px) {
   .plot-fields-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 10px;
+    gap: 12px;
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 520px) {
   .plot-fields-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 10px;
@@ -366,6 +366,7 @@
   gap: 5px;
   min-width: 0;
   width: 100%;
+  overflow: hidden;
 }
 
 .field-label {
@@ -386,6 +387,7 @@
 .field-input {
   width: 100%;
   max-width: 100%;
+  min-width: 0;
   box-sizing: border-box;
   padding: 8px 10px;
   border-radius: 6px;
@@ -419,13 +421,14 @@
 .plot-detail-chip {
   font-size: 0.7rem;
   color: var(--secondary-text);
-  padding: 3px 8px;
-  border-radius: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
   background: #FFFFFF;
   border: 1px solid rgba(135, 156, 122, 0.25);
   line-height: 1.4;
   max-width: 100%;
   word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .stage-chip {

@@ -1,4 +1,4 @@
-import { ArrowRight, CloudRain, Droplets, Sprout } from 'lucide-react';
+import { ArrowRight, CloudRain, Droplets, Sprout, BarChart3, Compass, CheckCircle2, MapPin } from 'lucide-react';
 
 export function LandingPage({
   onEnterFarm,
@@ -60,21 +60,21 @@ export function LandingPage({
               className="nav-link-btn"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             >
-              Home
+              Overview
             </button>
             <button
               type="button"
               className="nav-link-btn"
-              onClick={() => scrollToSection('how-it-works')}
+              onClick={() => scrollToSection('features')}
             >
-              How It Works
+              Features
             </button>
             <button
               type="button"
               className="nav-link-btn"
-              onClick={() => scrollToSection('about')}
+              onClick={() => scrollToSection('sustainability')}
             >
-              About
+              Sustainability
             </button>
           </nav>
 
@@ -83,18 +83,17 @@ export function LandingPage({
               type="button"
               className="btn-launch-nav"
               onClick={onEnterFarm}
-              aria-label="Launch Farm Simulator"
+              aria-label="Explore Your Farm"
             >
-              <span>Launch Simulator</span>
+              <span>Explore Your Farm</span>
               <ArrowRight size={15} />
             </button>
           </div>
         </div>
       </header>
 
-      {/* Subtle Background Decorative Depth (4-8% Opacity Field Contours, Blurred Sage Glows & Botanical Silhouettes) */}
+      {/* Subtle Background Decorative Depth (Field Contours & Ambient Glows) */}
       <div className="landing-bg-decorations" aria-hidden="true">
-        {/* Softly Blurred Sage/Cream Ambient Gradient Glow Shapes */}
         <div className="ambient-glow glow-top-left"></div>
         <div className="ambient-glow glow-mid-right"></div>
         <div className="ambient-glow glow-bottom-center"></div>
@@ -106,7 +105,6 @@ export function LandingPage({
           preserveAspectRatio="none"
           xmlns="http://www.w3.org/2000/svg"
         >
-          {/* Gentle undulating field elevation contour curves */}
           <path
             d="M-50,180 C280,120 540,240 850,160 C1120,90 1320,190 1500,140"
             fill="none"
@@ -133,62 +131,29 @@ export function LandingPage({
             stroke="var(--muted-sage)"
             strokeWidth="1.2"
           />
-          <path
-            d="M-50,680 C340,630 710,730 1080,640 C1320,570 1420,660 1500,620"
-            fill="none"
-            stroke="var(--muted-sage)"
-            strokeWidth="1.2"
-          />
-          {/* Terrace contour arcs resembling agricultural contour farming */}
           <ellipse cx="100" cy="760" rx="200" ry="80" fill="none" stroke="var(--muted-sage)" strokeWidth="1" />
-          <ellipse cx="100" cy="760" rx="140" ry="55" fill="none" stroke="var(--muted-sage)" strokeWidth="1" strokeDasharray="4 4" />
           <ellipse cx="1340" cy="240" rx="180" ry="70" fill="none" stroke="var(--muted-sage)" strokeWidth="1" />
-          <ellipse cx="1340" cy="240" rx="120" ry="45" fill="none" stroke="var(--muted-sage)" strokeWidth="1" strokeDasharray="4 4" />
-
-          {/* Perspective field-row lines across the lower horizon */}
           <line x1="200" y1="900" x2="680" y2="600" stroke="var(--muted-sage)" strokeWidth="0.9" strokeDasharray="5 5" />
-          <line x1="450" y1="900" x2="720" y2="600" stroke="var(--muted-sage)" strokeWidth="0.9" strokeDasharray="5 5" />
           <line x1="720" y1="900" x2="750" y2="600" stroke="var(--muted-sage)" strokeWidth="0.9" />
-          <line x1="990" y1="900" x2="780" y2="600" stroke="var(--muted-sage)" strokeWidth="0.9" strokeDasharray="5 5" />
           <line x1="1240" y1="900" x2="820" y2="600" stroke="var(--muted-sage)" strokeWidth="0.9" strokeDasharray="5 5" />
         </svg>
-
-        {/* Faint Botanical Leaf Silhouettes Near Outer Edges */}
-        <div className="botanical-silhouette silhouette-left">
-          <svg viewBox="0 0 120 320" width="110" height="300" fill="currentColor">
-            <path d="M10,300 Q40,230 30,155 Q20,75 70,10 Q65,60 45,115 Q30,165 38,235 Z" opacity="0.65" />
-            <path d="M30,155 Q68,135 92,108 Q68,132 30,155 Z" />
-            <path d="M26,195 Q72,185 102,160 Q72,190 26,195 Z" />
-            <path d="M34,115 Q64,90 84,60 Q58,90 34,115 Z" />
-            <path d="M36,245 Q78,245 106,225 Q74,252 36,245 Z" />
-          </svg>
-        </div>
-
-        <div className="botanical-silhouette silhouette-right">
-          <svg viewBox="0 0 120 320" width="110" height="300" fill="currentColor">
-            <path d="M110,300 Q80,230 90,155 Q100,75 50,10 Q55,60 75,115 Q90,165 82,235 Z" opacity="0.65" />
-            <path d="M90,155 Q52,135 28,108 Q52,132 90,155 Z" />
-            <path d="M94,195 Q48,185 18,160 Q48,190 94,195 Z" />
-            <path d="M86,115 Q56,90 36,60 Q62,90 86,115 Z" />
-            <path d="M84,245 Q42,245 14,225 Q46,252 84,245 Z" />
-          </svg>
-        </div>
       </div>
 
       {/* -------------------------------------------------------------
-          2. Hero Section: Emotional Storytelling & Cinematic Illustration
+          2. Hero Section: Cinematic Agricultural Farmland at Golden Hour
           ------------------------------------------------------------- */}
       <section className="landing-hero-section">
         <div className="hero-content-col">
           <div className="hero-story-eyebrow">
-            <span className="eyebrow-accent-leaf">🌱</span>
-            <span>A Story of Land, Care & Science</span>
+            <span className="eyebrow-accent-leaf">🌾</span>
+            <span>Intelligent Agricultural Digital Twin</span>
           </div>
 
-          <h1 className="hero-headline">Every field has a story.</h1>
+          <h1 className="hero-headline">See Your Farm. Grow Smarter.</h1>
 
           <p className="hero-description">
-            Understand your fields. Plan smarter irrigation. Build a healthier tomorrow.
+            Unite real-time Open-Meteo weather insights, intelligent micro-irrigation simulation, and
+            crop health models in an immersive 3D living digital twin. Farm with science, foresight, and care.
           </p>
 
           <div className="hero-cta-wrap">
@@ -202,6 +167,15 @@ export function LandingPage({
               <ArrowRight size={18} />
             </button>
 
+            <button
+              type="button"
+              className="btn-discover-features"
+              onClick={() => scrollToSection('features')}
+              aria-label="Discover Features"
+            >
+              <span>Discover Features</span>
+            </button>
+
             {onOpenLocationSearch && (
               <button
                 type="button"
@@ -209,13 +183,14 @@ export function LandingPage({
                 onClick={onOpenLocationSearch}
                 title="Change farm coordinates or search worldwide locations"
               >
+                <MapPin size={14} className="text-pine" />
                 <span>Active Field: {locationName}</span>
               </button>
             )}
           </div>
         </div>
 
-        {/* Large, realistic cinematic illustration of Indian farmer overlooking farmland */}
+        {/* Cinematic illustration of farmer overlooking golden hour farmland */}
         <div className="hero-illustration-col">
           <div className="hero-artwork-frame">
             <img
@@ -227,7 +202,7 @@ export function LandingPage({
             <div className="artwork-caption-strip">
               <span className="artwork-caption-dot"></span>
               <span className="artwork-caption-text">
-                Harmony of tradition and atmospheric science • Golden Hour
+                Living Agritech • Real-time Meteorological Sync & FAO-56 Physics
               </span>
             </div>
           </div>
@@ -235,77 +210,184 @@ export function LandingPage({
       </section>
 
       {/* -------------------------------------------------------------
-          3. Three Concise Supporting Feature Sections Below the Hero
+          3. Four Visually Consistent Feature Cards
           ------------------------------------------------------------- */}
-      <section id="how-it-works" className="landing-features-section">
+      <section id="features" className="landing-features-section">
         <div className="features-intro">
-          <span className="features-eyebrow">Practical Climate Technology</span>
-          <h2 className="features-main-title">Grounded in the Reality of Agriculture</h2>
+          <span className="features-eyebrow">Precision Agriculture Architecture</span>
+          <h2 className="features-main-title">Grounded in the Science of Farmland</h2>
           <p className="features-sub-text">
-            Three interconnected pillars connect atmospheric reality with day-to-day farming decisions.
+            Four interconnected capabilities bring atmospheric reality and soil physics directly to your daily farming decisions.
           </p>
         </div>
 
-        <div className="features-three-grid">
-          {/* Feature 1: Weather Awareness */}
-          <div className="story-feature-card">
-            <div className="feature-icon-circle">
-              <CloudRain size={22} className="text-pine" />
+        <div className="features-four-grid">
+          {/* Card 1: Real-Time Weather Insights */}
+          <div className="feature-card-item">
+            <div className="feature-card-media">
+              <img
+                src="/weather_insights.jpg"
+                alt="Agricultural weather station telemetry"
+                className="feature-card-img"
+                loading="lazy"
+              />
+              <div className="feature-card-badge">
+                <CloudRain size={13} />
+                <span>Open-Meteo Live API</span>
+              </div>
             </div>
-            <h3 className="feature-title">Weather Awareness</h3>
-            <p className="feature-desc">
-              Connect to live Open-Meteo meteorological streams. Anticipate rainfall, solar radiation,
-              and atmospheric vapor deficits before irrigating dry furrows.
-            </p>
+            <div className="feature-card-body">
+              <h3 className="feature-card-title">Real-Time Weather Insights</h3>
+              <p className="feature-card-text">
+                Live meteorological telemetry synchronized hourly. Track solar irradiance, dew point, vapor pressure deficits, and localized rainfall before starting irrigation cycles.
+              </p>
+            </div>
           </div>
 
-          {/* Feature 2: Crop Monitoring */}
-          <div className="story-feature-card">
-            <div className="feature-icon-circle">
-              <Sprout size={22} className="text-pine" />
+          {/* Card 2: 3D Farm Visualization */}
+          <div className="feature-card-item">
+            <div className="feature-card-media">
+              <img
+                src="/farm_3d_viz.jpg"
+                alt="3D living agricultural farm digital twin"
+                className="feature-card-img"
+                loading="lazy"
+              />
+              <div className="feature-card-badge">
+                <Compass size={13} />
+                <span>Living Digital Twin</span>
+              </div>
             </div>
-            <h3 className="feature-title">Crop Monitoring</h3>
-            <p className="feature-desc">
-              Track vegetative vigor, growth stages, and root-zone water demands across varied crop varieties
-              with deterministic physical models.
-            </p>
+            <div className="feature-card-body">
+              <h3 className="feature-card-title">3D Farm Visualization</h3>
+              <p className="feature-card-text">
+                Inspect your property from immersive 3D and aerial top-down camera views. Observe waving wheat swaths, furrow ridges, irrigation risers, and crop growth stages.
+              </p>
+            </div>
           </div>
 
-          {/* Feature 3: Smarter Irrigation */}
-          <div className="story-feature-card">
-            <div className="feature-icon-circle">
-              <Droplets size={22} className="text-pine" />
+          {/* Card 3: Smart Irrigation Simulation */}
+          <div className="feature-card-item">
+            <div className="feature-card-media">
+              <img
+                src="/smart_irrigation.jpg"
+                alt="Smart precision micro-drip irrigation"
+                className="feature-card-img"
+                loading="lazy"
+              />
+              <div className="feature-card-badge">
+                <Droplets size={13} />
+                <span>Micro-Drip Delivery</span>
+              </div>
             </div>
-            <h3 className="feature-title">Smarter Irrigation</h3>
-            <p className="feature-desc">
-              Evaluate imminent rain inside a 6-hour forecast window. Compare conventional fixed-schedule
-              pumping with predictive rain deferral to conserve thousands of litres.
-            </p>
+            <div className="feature-card-body">
+              <h3 className="feature-card-title">Smart Irrigation Simulation</h3>
+              <p className="feature-card-text">
+                Simulate soil moisture dynamics across root zones over time. Watch furrow beds react to natural infiltration, evapotranspiration loss, and active drip cycles.
+              </p>
+            </div>
+          </div>
+
+          {/* Card 4: Compare Farming Strategies */}
+          <div className="feature-card-item">
+            <div className="feature-card-media strategy-media-wrap">
+              <div className="strategy-visual-card">
+                <div className="strategy-chart-header">
+                  <span className="strategy-tag">Predictive Optimization</span>
+                  <span className="strategy-save-pill">~40% Water Saved</span>
+                </div>
+                <div className="strategy-bars-compare">
+                  <div className="strategy-bar-row">
+                    <span className="bar-label">Conventional:</span>
+                    <div className="bar-track">
+                      <div className="bar-fill fill-conventional" style={{ width: '85%' }}></div>
+                    </div>
+                    <span className="bar-val">12,000 L</span>
+                  </div>
+                  <div className="strategy-bar-row">
+                    <span className="bar-label">TerraPulse:</span>
+                    <div className="bar-track">
+                      <div className="bar-fill fill-forecast" style={{ width: '45%' }}></div>
+                    </div>
+                    <span className="bar-val">6,500 L</span>
+                  </div>
+                </div>
+                <div className="strategy-chart-footer">
+                  <span className="strategy-sub">Forecast-Aware Deferral ahead of rain</span>
+                </div>
+              </div>
+              <div className="feature-card-badge">
+                <BarChart3 size={13} />
+                <span>Decision Intelligence</span>
+              </div>
+            </div>
+            <div className="feature-card-body">
+              <h3 className="feature-card-title">Compare Farming Strategies</h3>
+              <p className="feature-card-text">
+                Benchmark conventional timer-based irrigation against forecast-aware strategies. Suppress unnecessary water pumping when natural rainfall is expected in the 6-hour window.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* -------------------------------------------------------------
-          4. About Section & Storytelling Callout
+          4. Sustainability & Smarter Farm Stewardship Section
           ------------------------------------------------------------- */}
-      <section id="about" className="landing-about-section">
-        <div className="about-card">
-          <div className="about-text-content">
-            <span className="about-tag">About TerraPulse</span>
-            <h2 className="about-title">Empowering farmers to conserve water without risking crop health</h2>
-            <p className="about-desc">
-              TerraPulse was engineered to make climate data tangible. By uniting real-time meteorology,
-              soil moisture physics, and interactive 3D visualization, farmers and agronomists can explore
-              how weather changes their fields in real time.
+      <section id="sustainability" className="landing-sustainability-section">
+        <div className="sustainability-card">
+          <div className="sustainability-content">
+            <div className="sustainability-eyebrow">
+              <Sprout size={14} className="text-pine" />
+              <span>Sustainable Land Stewardship</span>
+            </div>
+            <h2 className="sustainability-title">
+              Smarter irrigation decisions for a water-resilient agricultural future
+            </h2>
+            <p className="sustainability-desc">
+              Agriculture accounts for over 70% of global freshwater withdrawals. TerraPulse helps growers and agronomists make every drop count by uniting meteorological forecast models with verified soil physics equations.
             </p>
-            <div className="about-cta-row">
+
+            <div className="sustainability-metrics-grid">
+              <div className="sustain-metric-item">
+                <div className="sustain-icon-wrap">
+                  <Droplets size={18} className="text-pine" />
+                </div>
+                <div className="sustain-info">
+                  <span className="sustain-num">Up to 40%</span>
+                  <span className="sustain-sub">Water Conserved via Rain Deferral</span>
+                </div>
+              </div>
+
+              <div className="sustain-metric-item">
+                <div className="sustain-icon-wrap">
+                  <CheckCircle2 size={18} className="text-pine" />
+                </div>
+                <div className="sustain-info">
+                  <span className="sustain-num">Root Health</span>
+                  <span className="sustain-sub">Prevents Saturation & Nutrient Leaching</span>
+                </div>
+              </div>
+
+              <div className="sustain-metric-item">
+                <div className="sustain-icon-wrap">
+                  <Sprout size={18} className="text-pine" />
+                </div>
+                <div className="sustain-info">
+                  <span className="sustain-num">100% Client-Side</span>
+                  <span className="sustain-sub">Zero Cloud Overhead, Instant Simulation</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="sustainability-cta-row">
               <button
                 type="button"
-                className="btn-about-launch"
+                className="btn-explore-farm"
                 onClick={onEnterFarm}
               >
-                <span>Launch Interactive Farm</span>
-                <ArrowRight size={15} />
+                <span>Launch Virtual Farm</span>
+                <ArrowRight size={16} />
               </button>
             </div>
           </div>
@@ -320,20 +402,20 @@ export function LandingPage({
           <div className="footer-top-row">
             <div className="footer-brand-info">
               <span className="footer-brand-title">TerraPulse Agriculture</span>
-              <p className="footer-tagline">“Every field has a story. Farm for tomorrow.”</p>
+              <p className="footer-tagline">“See Your Farm. Grow Smarter.”</p>
             </div>
             <button
               type="button"
               className="btn-footer-launch"
               onClick={onEnterFarm}
             >
-              <span>Launch Simulator</span>
+              <span>Explore Your Farm</span>
               <ArrowRight size={14} />
             </button>
           </div>
           <div className="footer-bottom-row">
             <p className="footer-copyright">
-              © 2026 TerraPulse. Dedicated to sustainable land stewardship and smarter irrigation.
+              © 2026 TerraPulse. Built for agricultural stewardship and smart climate-tech simulation.
             </p>
           </div>
         </div>

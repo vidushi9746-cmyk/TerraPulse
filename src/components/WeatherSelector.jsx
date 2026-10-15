@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Sun, Cloud, CloudRain, Check, Radio, RotateCw, AlertCircle, Clock } from 'lucide-react';
 
 export function WeatherSelector({
@@ -60,8 +61,24 @@ export function WeatherSelector({
     }
   };
 
-  // Slice next 12 hours from forecast
-  const next12Hours = Array.isArray(hourlyForecast) ? hourlyForecast.slice(0, 12) : [];
+  // Slice next 12 hours starting from current hour instead of midnight
+  const next12Hours = useMemo(() => {
+    if (!Array.isArray(hourlyForecast) || hourlyForecast.length === 0) return [];
+    if (!liveWeather?.updatedAt) return hourlyForecast.slice(0, 12);
+    const baseTime = new Date(liveWeather.updatedAt).getTime();
+    let startIdx = 0;
+    let minDiff = Infinity;
+    for (let i = 0; i < hourlyForecast.length; i++) {
+      if (!hourlyForecast[i]?.timestamp) continue;
+      const t = new Date(hourlyForecast[i].timestamp).getTime();
+      const diff = Math.abs(t - baseTime);
+      if (diff < minDiff) {
+        minDiff = diff;
+        startIdx = i;
+      }
+    }
+    return hourlyForecast.slice(startIdx, startIdx + 12);
+  }, [hourlyForecast, liveWeather]);
 
   return (
     <div className="weather-selector-card">

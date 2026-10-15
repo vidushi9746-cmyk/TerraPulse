@@ -3,6 +3,7 @@ import { Droplets, Sprout, Zap } from 'lucide-react';
 export function FarmStatus({ simulation = {} }) {
   const moisturePercent = simulation?.soilMoisturePercent ?? 34;
   const healthPercent = simulation?.cropHealthScore ?? 95;
+  const estimatedNdvi = Math.max(0.15, Math.min(0.88, 0.2 + (healthPercent / 100) * 0.65)).toFixed(2);
 
   // Visual status pill for irrigation action
   const actionBadges = {
@@ -126,8 +127,8 @@ export function FarmStatus({ simulation = {} }) {
           </div>
 
           <div className="gauge-secondary-row meter-scale-markers">
-            <span className="secondary-label">Canopy Vigor</span>
-            <span className="secondary-metric marker-opt">NDVI 0.84</span>
+            <span className="secondary-label">Est. Canopy Vigor</span>
+            <span className="secondary-metric marker-opt">NDVI ~{estimatedNdvi} (Model)</span>
           </div>
         </div>
       </div>
@@ -164,8 +165,14 @@ export function FarmStatus({ simulation = {} }) {
             <span className="ad-meta-val">{simulation?.evapotranspirationRateMmDay ?? 1.2} mm/day</span>
           </div>
           <div className="advisory-meta-item">
-            <span className="ad-meta-label">Simulated Soil Temp:</span>
-            <span className="ad-meta-val">{simulation?.soilTemperatureC ?? 18.5}°C</span>
+            <span className="ad-meta-label">
+              {simulation?.soilTemperatureMode === 'model-estimate' ? 'Model Soil Temp (6cm):' : 'Simulated Soil Temp:'}
+            </span>
+            <span className="ad-meta-val">
+              {simulation?.soilTemperatureC !== null && simulation?.soilTemperatureC !== undefined
+                ? `${simulation.soilTemperatureC}°C`
+                : '--'}
+            </span>
           </div>
           <div className="advisory-meta-item">
             <span className="ad-meta-label">Water Conserved Today:</span>
@@ -177,7 +184,7 @@ export function FarmStatus({ simulation = {} }) {
       </div>
 
       <div className="farm-status-disclaimer">
-        <span>SIMULATED: Mathematical soil & crop models. Not physical sensor measurements.</span>
+        <span>DATA PROVENANCE: Mathematical soil & crop models and NWP model estimates (6cm depth). Not physical in-situ sensor measurements.</span>
       </div>
     </div>
   );
