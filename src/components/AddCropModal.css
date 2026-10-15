@@ -1,0 +1,464 @@
+/* ==========================================================================
+   TerraPulse Agriculture — Add / Assign Crop Modal
+   Theme: Warm Ivory + Deep Pine Precision Farming
+   ========================================================================== */
+
+.add-crop-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(36, 59, 46, 0.48);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.add-crop-card {
+  width: 100%;
+  max-width: 780px;
+  max-height: 88vh;
+  background: #FFFFFF;
+  border: 1px solid rgba(135, 156, 122, 0.35);
+  border-radius: var(--radius-xl, 18px);
+  box-shadow: 0 20px 50px rgba(36, 59, 46, 0.22);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+  animation: scaleUpCrop 0.18s ease;
+}
+
+@keyframes scaleUpCrop {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Header */
+.add-crop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid rgba(135, 156, 122, 0.25);
+  background: #FAF6EE;
+  flex-shrink: 0;
+}
+
+.add-crop-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.add-crop-icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(184, 203, 168, 0.35);
+  border: 1px solid rgba(135, 156, 122, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-crop-title {
+  margin: 0;
+  font-family: var(--font-display, inherit);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--primary-text, #263329);
+}
+
+.add-crop-subtitle {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--secondary-text, #6F786D);
+}
+
+.add-crop-close-btn {
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(135, 156, 122, 0.3);
+  background: #FFFFFF;
+  color: var(--secondary-text, #6F786D);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.add-crop-close-btn:hover {
+  background: #EAE2D2;
+  color: #243B2E;
+  border-color: #243B2E;
+}
+
+/* Error Alert */
+.add-crop-error-alert {
+  margin: 14px 24px 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(194, 84, 68, 0.1);
+  border: 1px solid rgba(194, 84, 68, 0.3);
+  color: #C25444;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+/* Body */
+.add-crop-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: #FFFFFF;
+}
+
+.add-crop-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.section-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--primary-text, #263329);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 1. Crop Selection Cards Grid */
+.crop-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 720px) {
+  .crop-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 440px) {
+  .crop-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.crop-select-card {
+  padding: 14px 12px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(135, 156, 122, 0.3);
+  background: #FAF6EE;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.crop-select-card:hover {
+  background: #FFFFFF;
+  border-color: #243B2E;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(36, 59, 46, 0.08);
+}
+
+.crop-select-card.selected {
+  background: #FFFFFF;
+  border-color: #243B2E;
+  box-shadow: 0 0 0 2px #243B2E, 0 6px 18px rgba(36, 59, 46, 0.12);
+}
+
+.crop-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.crop-emoji {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.crop-selected-check {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #243B2E;
+  color: #F5F0E6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.crop-card-name {
+  font-family: var(--font-display, inherit);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--primary-text, #263329);
+  line-height: 1.25;
+}
+
+.crop-card-cat {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--muted-sage, #879C7A);
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.crop-card-desc {
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--secondary-text, #6F786D);
+  margin: 6px 0 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.crop-card-badges {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.crop-chip {
+  font-size: 0.66rem;
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: #FFFFFF;
+  border: 1px solid rgba(135, 156, 122, 0.25);
+  color: var(--secondary-text, #6F786D);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.demand-chip {
+  background: rgba(184, 203, 168, 0.3);
+  color: var(--deep-pine, #243B2E);
+  font-weight: 600;
+}
+
+/* 2. Furrow Selection Grid */
+.furrow-select-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 720px) {
+  .furrow-select-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.furrow-select-pill {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(135, 156, 122, 0.35);
+  background: #FAF6EE;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.furrow-select-pill:hover {
+  background: #FFFFFF;
+  border-color: #243B2E;
+}
+
+.furrow-select-pill.selected {
+  background: #EAE2D2;
+  border-color: #243B2E;
+  box-shadow: 0 0 0 1.5px #243B2E;
+}
+
+.furrow-pill-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.furrow-num {
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #243B2E;
+  color: #F5F0E6;
+}
+
+.furrow-name {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--primary-text, #263329);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.furrow-status-text {
+  font-size: 0.68rem;
+  color: var(--secondary-text, #6F786D);
+}
+
+.furrow-select-pill.fallow .furrow-status-text {
+  color: #A98562;
+  font-weight: 600;
+}
+
+/* 3. Growth Stage & Input Row */
+.grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 600px) {
+  .grid-2col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-subgroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.add-crop-select,
+.add-crop-input {
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(135, 156, 122, 0.35);
+  background: #FAF6EE;
+  color: var(--primary-text, #263329);
+  font-size: 0.82rem;
+  outline: none;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.add-crop-select:focus,
+.add-crop-input:focus {
+  border-color: #243B2E;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 2px rgba(36, 59, 46, 0.12);
+}
+
+.subgroup-helper {
+  font-size: 0.7rem;
+  color: var(--secondary-text, #6F786D);
+  line-height: 1.35;
+}
+
+/* Note */
+.model-limitation-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #FAF6EE;
+  border: 1px dashed rgba(135, 156, 122, 0.45);
+}
+
+.note-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.note-text {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--secondary-text, #6F786D);
+}
+
+/* Footer */
+.add-crop-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid rgba(135, 156, 122, 0.25);
+  background: #FAF6EE;
+  flex-shrink: 0;
+}
+
+.btn-crop-cancel {
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: 1px solid rgba(135, 156, 122, 0.4);
+  background: #FFFFFF;
+  color: var(--secondary-text, #6F786D);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-crop-cancel:hover {
+  background: #EAE2D2;
+  color: #263329;
+}
+
+.btn-crop-plant {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 22px;
+  border-radius: 8px;
+  border: 1px solid #243B2E;
+  background: #243B2E;
+  color: #F5F0E6;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 2px 8px rgba(36, 59, 46, 0.18);
+}
+
+.btn-crop-plant:hover {
+  background: #1A2C22;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(36, 59, 46, 0.24);
+}
