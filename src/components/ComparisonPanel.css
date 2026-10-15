@@ -1,0 +1,323 @@
+/* ==========================================================================
+   TerraPulse Comparison Panel — Warm Ivory & Deep Pine Identity
+   ========================================================================== */
+
+.comparison-panel {
+  width: 100%;
+  padding: 20px;
+  border: 1px solid rgba(135, 156, 122, 0.28);
+  border-radius: var(--radius-lg, 14px);
+  background: #FFFFFF;
+  color: var(--primary-text, #263329);
+  box-shadow: var(--shadow-card);
+  box-sizing: border-box;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.comparison-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.comparison-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.comparison-title {
+  margin: 0;
+  font-family: var(--font-display, inherit);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary-text, #263329);
+}
+
+.comparison-scenario-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: rgba(184, 203, 168, 0.35);
+  color: var(--deep-pine, #243B2E);
+  border: 1px solid rgba(135, 156, 122, 0.4);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+/* Primary Highlight Delta Card */
+.comparison-delta-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 20px;
+  border-radius: var(--radius-md, 10px);
+  background: #FAF6EE;
+  border: 1px solid rgba(135, 156, 122, 0.35);
+  flex-wrap: wrap;
+}
+
+.delta-stat-column {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.delta-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--secondary-text, #6F786D);
+  text-transform: uppercase;
+}
+
+.delta-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.delta-number {
+  font-family: var(--font-display, inherit);
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: var(--deep-pine, #243B2E);
+}
+
+.delta-volume {
+  font-size: 0.85rem;
+  color: var(--secondary-text, #6F786D);
+  font-weight: 500;
+}
+
+.delta-meta-column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.recommendation-pill {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.badge-favorable {
+  background: rgba(184, 203, 168, 0.4);
+  color: var(--deep-pine, #243B2E);
+  border: 1px solid rgba(135, 156, 122, 0.5);
+}
+
+.badge-neutral {
+  background: rgba(169, 133, 98, 0.15);
+  color: var(--earthy-brown, #A98562);
+  border: 1px solid rgba(169, 133, 98, 0.35);
+}
+
+.badge-conventional {
+  background: rgba(135, 156, 122, 0.2);
+  color: var(--secondary-text, #6F786D);
+  border: 1px solid rgba(135, 156, 122, 0.35);
+}
+
+.delta-percent-sub {
+  font-size: 0.74rem;
+  color: var(--secondary-text, #6F786D);
+}
+
+/* Strategies Grid */
+.strategies-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 600px) {
+  .strategies-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.strategy-card {
+  padding: 14px 16px;
+  border-radius: var(--radius-md, 10px);
+  border: 1px solid rgba(135, 156, 122, 0.25);
+  background: #FAF6EE;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.conventional-card {
+  border-left: 4px solid var(--muted-sage, #879C7A);
+}
+
+.forecast-card {
+  border-left: 4px solid var(--deep-pine, #243B2E);
+}
+
+.strategy-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.strategy-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--primary-text, #263329);
+}
+
+.decision-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.badge-defer {
+  background: rgba(184, 203, 168, 0.35);
+  color: var(--deep-pine, #243B2E);
+  border: 1px solid rgba(135, 156, 122, 0.45);
+}
+
+.badge-reduce {
+  background: rgba(169, 133, 98, 0.18);
+  color: var(--earthy-brown, #A98562);
+  border: 1px solid rgba(169, 133, 98, 0.4);
+}
+
+.badge-irrigate {
+  background: rgba(74, 142, 168, 0.16);
+  color: var(--sky, #4A8EA8);
+  border: 1px solid rgba(74, 142, 168, 0.35);
+}
+
+.badge-skip {
+  background: rgba(135, 156, 122, 0.15);
+  color: var(--secondary-text, #6F786D);
+  border: 1px solid rgba(135, 156, 122, 0.3);
+}
+
+.strategy-metrics-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.76rem;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed rgba(135, 156, 122, 0.3);
+}
+
+.strategy-metric {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.strat-metric-label {
+  color: var(--secondary-text, #6F786D);
+}
+
+.strat-metric-val {
+  color: var(--primary-text, #263329);
+  font-weight: 700;
+}
+
+.strategy-reason {
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.48;
+  color: var(--secondary-text, #6F786D);
+}
+
+.fallback-notice {
+  margin-top: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(194, 84, 68, 0.1);
+  border: 1px solid rgba(194, 84, 68, 0.3);
+  color: var(--rose, #C25444);
+  font-size: 0.7rem;
+}
+
+/* Context Strip */
+.comparison-context-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #FAF6EE;
+  border-radius: 8px;
+  border: 1px solid rgba(135, 156, 122, 0.25);
+  font-size: 0.74rem;
+  flex-wrap: wrap;
+}
+
+.context-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.context-label {
+  color: var(--secondary-text, #6F786D);
+}
+
+.context-value {
+  color: var(--primary-text, #263329);
+  font-weight: 700;
+}
+
+/* Engine Warnings */
+.engine-warnings-box {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(201, 130, 44, 0.12);
+  border: 1px solid rgba(201, 130, 44, 0.35);
+  color: var(--amber, #C9822C);
+  font-size: 0.74rem;
+}
+
+.warning-heading {
+  font-weight: 700;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.warning-list {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.warning-list li {
+  margin-bottom: 2px;
+}
+
+/* Note */
+.comparison-note {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(135, 156, 122, 0.12);
+  border: 1px solid rgba(135, 156, 122, 0.22);
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--secondary-text, #6F786D);
+}
+
+.comparison-note p {
+  margin: 0;
+}

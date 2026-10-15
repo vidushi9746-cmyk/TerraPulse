@@ -412,4 +412,138 @@ describe('Irrigation Engine Test Suite', () => {
       /Invalid windowHours: must be a positive integer representing whole hours/
     );
   });
+
+  it('Regression 5: Flat options object and currentSoilMoisture alias handling', () => {
+    const forecast = [
+      { timestamp: '2026-10-14T13:00:00.000Z', precipitation: 5.0 },
+      { timestamp: '2026-10-14T14:00:00.000Z', precipitation: 5.0 },
+      { timestamp: '2026-10-14T15:00:00.000Z', precipitation: 5.0 },
+      { timestamp: '2026-10-14T16:00:00.000Z', precipitation: 5.0 },
+      { timestamp: '2026-10-14T17:00:00.000Z', precipitation: 0.0 },
+      { timestamp: '2026-10-14T18:00:00.000Z', precipitation: 0.0 },
+    ];
+
+    // Flat options object with currentSoilMoisture and hourlyForecast alias
+    const flatResult = compareIrrigation({
+      ...baseEnvironmentState,
+      currentSoilMoisture: 26.0,
+      hourlyForecast: forecast,
+      forecastWindowHours: 6,
+    });
+    assert.strictEqual(flatResult.scenario.initialSoilMoisture, 26.0);
+    assert.strictEqual(flatResult.forecastAware.decision, 'DEFER');
+
+    // Missing initialSoilMoisture must still throw validation error
+    assert.throws(
+      () => compareIrrigation({ ...baseEnvironmentState }),
+      /Invalid initialSoilMoisture: must be a finite number between 0 and 100/
+    );
+  });
+
+  describe('Rainfall Considered Data Flow & Boundary Conditions', () => {
+    it('RAIN-1: Non-zero rainfall is accurately accumulated and exposed on scenario and forecastAware', () => {
+      const forecast = [
+        { timestamp: '2026-10-14T13:00:00.000Z', precipitation: 2.0 },
+        { timestamp: '2026-10-14T14:00:00.000Z', precipitation: 3.5 },
+        { timestamp: '2026-10-14T15:00:00.000Z', precipitation: 1.5 },
+        { timestamp: '2026-10-14T16:00:00.000Z', precipitation: 0.0 },
+        { timestamp: '2026-10-14T17:00:00.000Z', precipitation: 2.5 },
+        { timestamp: '2026-10-14T18:00:00.000Z', precipitation: 1.0 },
+      ];
+      const env = {
+        ...baseEnvironmentState,
+        updatedAt: '2026-10-14T12:00:00.000Z',
+        forecast,
+      };
+
+      const result = compareIrrigation(env, 25.0, { forecastWindowHours: 6 });
+      assert.strictEqual(result.scenario.forecastStatus, 'VALID');
+      assert.strictEqual(result.scenario.totalRainMm, 10.5);
+      assert.strictEqual(result.forecastAware.totalRainMm, 10.5);
+      assert.strictEqual(result.comparison.totalRainMm, 10.5);
+      assert.strictEqual(typeof result.scenario.totalRainMm, 'number');
+    });
+
+    it('RAIN-2: Valid zero rainfall (0.0 mm) is strictly distinguished from missing/unavailable data', () => {
+      const zeroRainForecast = [
+        { timestamp: '2026-10-14T13:00:00.000Z', precipitation: 0.0 },
+        { timestamp: '2026-10-14T14:00:00.000Z', precipitation: 0.0 },
+        { timestamp: '2026-10-14T15:00:00.000Z', precipitation: 0.0 },
+        { timestamp: '2026-10-14T16:00:00.000Z', precipitation: 0.0 },
+        { timestamp: '2026-10-14T17:00:00.000Z', precipitation: 0.0 },
+        { timestamp: '2026-10-14T18:00:00.000Z', precipitation: 0.0 },
+      ];
+      const env = {
+        ...baseEnvironmentState,
+        updatedAt: '2026-10-14T12:00:00.000Z',
+        forecast: zeroRainForecast,
+      };
+
+      const result = compareIrrigation(env, 25.0, { forecastWindowHours: 6 });
+      assert.strictEqual(result.scenario.forecastStatus, 'VALID');
+      assert.strictEqual(result.scenario.totalRainMm, 0);
+      assert.strictEqual(result.forecastAware.totalRainMm, 0);
+      assert.strictEqual(result.comparison.totalRainMm, 0);
+      assert.strictEqual(typeof result.scenario.totalRainMm, 'number');
+      assert.notStrictEqual(result.scenario.totalRainMm, null);
+      assert.strictEqual(result.forecastAware.fallbackApplied, false);
+    });
+
+    it('RAIN-3: Missing/null precipitation fields evaluate to null totalRainMm and trigger fallback with warning', () => {
+      const missingFieldForecast = [
+        { timestamp: '2026-10-14T13:00:00.000Z', precipitation: 0.0 },
+        { timestamp: '2026-10-14T14:00:00.000Z', precipitation: null }, // missing field
+        { timestamp: '2026-10-14T15:00:00.000Z', precipitation: 0.0 },
+        { timestamp: '2026-10-14T16:00:00.000Z', precipitation: undefined }, // missing field
+        { timestamp: '2026-10-14T17:00:00.000Z', precipitation: 0.0 },
+        { timestamp: '2026-10-14T18:00:00.000Z', precipitation: 0.0 },
+      ];
+      const env = {
+        ...baseEnvironmentState,
+        updatedAt: '2026-10-14T12:00:00.000Z',
+        forecast: missingFieldForecast,
+      };
+
+      const result = compareIrrigation(env, 25.0, { forecastWindowHours: 6 });
+      assert.strictEqual(result.scenario.forecastStatus, 'INSUFFICIENT');
+      assert.strictEqual(result.scenario.totalRainMm, null);
+      assert.strictEqual(result.forecastAware.totalRainMm, null);
+      assert.strictEqual(result.comparison.totalRainMm, null);
+      assert.strictEqual(result.forecastAware.fallbackApplied, true);
+      assert.ok(result.warnings.some((w) => w.includes('Never assuming zero rain')));
+    });
+
+    it('RAIN-4: Incomplete forecast data (empty array or missing intervals) sets totalRainMm to null', () => {
+      // Case 4A: Empty forecast array (UNAVAILABLE)
+      const emptyEnv = {
+        ...baseEnvironmentState,
+        updatedAt: '2026-10-14T12:00:00.000Z',
+        forecast: [],
+      };
+      const emptyResult = compareIrrigation(emptyEnv, 25.0, { forecastWindowHours: 6 });
+      assert.strictEqual(emptyResult.scenario.forecastStatus, 'UNAVAILABLE');
+      assert.strictEqual(emptyResult.scenario.totalRainMm, null);
+      assert.strictEqual(emptyResult.forecastAware.totalRainMm, null);
+      assert.strictEqual(emptyResult.comparison.totalRainMm, null);
+      assert.strictEqual(emptyResult.forecastAware.fallbackApplied, true);
+
+      // Case 4B: Incomplete coverage (only 3 of 6 hours provided) (INSUFFICIENT)
+      const shortForecast = [
+        { timestamp: '2026-10-14T13:00:00.000Z', precipitation: 1.0 },
+        { timestamp: '2026-10-14T14:00:00.000Z', precipitation: 1.0 },
+        { timestamp: '2026-10-14T15:00:00.000Z', precipitation: 1.0 },
+      ];
+      const shortEnv = {
+        ...baseEnvironmentState,
+        updatedAt: '2026-10-14T12:00:00.000Z',
+        forecast: shortForecast,
+      };
+      const shortResult = compareIrrigation(shortEnv, 25.0, { forecastWindowHours: 6 });
+      assert.strictEqual(shortResult.scenario.forecastStatus, 'INSUFFICIENT');
+      assert.strictEqual(shortResult.scenario.totalRainMm, null);
+      assert.strictEqual(shortResult.forecastAware.totalRainMm, null);
+      assert.strictEqual(shortResult.comparison.totalRainMm, null);
+      assert.strictEqual(shortResult.forecastAware.fallbackApplied, true);
+    });
+  });
 });

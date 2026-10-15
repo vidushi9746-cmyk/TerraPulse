@@ -448,6 +448,7 @@ export function evaluateConventionalStrategy(initialSoilMoisture, config = {}) {
  *   projectedMoisture: number,
  *   fallbackApplied: boolean,
  *   forecastStatus: 'VALID'|'INSUFFICIENT'|'UNAVAILABLE',
+ *   totalRainMm: number|null,
  *   reason: string,
  *   warnings: string[]
  * }}
@@ -486,6 +487,7 @@ export function evaluateForecastAwareStrategy(
       projectedMoisture: fallback.projectedMoisture,
       fallbackApplied: true,
       forecastStatus,
+      totalRainMm: null,
       reason: fallbackReason,
       warnings,
     };
@@ -505,6 +507,7 @@ export function evaluateForecastAwareStrategy(
       projectedMoisture,
       fallbackApplied: false,
       forecastStatus,
+      totalRainMm,
       reason: `Current soil moisture (${moisture.toFixed(1)}%) is at or above dry threshold (${dryThreshold.toFixed(1)}%). No irrigation required.`,
       warnings: [],
     };
@@ -521,6 +524,7 @@ export function evaluateForecastAwareStrategy(
       projectedMoisture,
       fallbackApplied: false,
       forecastStatus,
+      totalRainMm,
       // Clearly clarify that DEFER means postpone and re-evaluate, not permanently skip
       reason: `Soil moisture (${moisture.toFixed(1)}%) is dry, but upcoming forecast predicts ${totalRainMm.toFixed(1)} mm rain in the next ${forecastWindowHours} hours (projected +${rainGain.toFixed(1)}% moisture). Irrigation is deferred until after the rain event; re-evaluate soil moisture after rainfall.`,
       warnings: [],
@@ -542,6 +546,7 @@ export function evaluateForecastAwareStrategy(
       projectedMoisture,
       fallbackApplied: false,
       forecastStatus,
+      totalRainMm,
       reason: `Soil moisture is dry (${moisture.toFixed(1)}%). Upcoming rain will provide ${totalRainMm.toFixed(1)} mm (+${rainGain.toFixed(1)}% moisture). Reduced irrigation to ${waterAppliedMm.toFixed(1)} mm to supplement rain and reach target moisture (${targetMoisture.toFixed(1)}%).`,
       warnings: [],
     };
@@ -560,6 +565,7 @@ export function evaluateForecastAwareStrategy(
     projectedMoisture,
     fallbackApplied: false,
     forecastStatus,
+    totalRainMm,
     reason: `Soil moisture (${moisture.toFixed(1)}%) is dry and forecasted rain within ${forecastWindowHours} hours is negligible (${totalRainMm.toFixed(1)} mm). Applying full irrigation (${waterAppliedMm.toFixed(1)} mm) to protect crops.`,
     warnings: [],
   };
@@ -591,19 +597,40 @@ export function compareIrrigation(environmentState, initialSoilMoisture, options
     typeof environmentState === 'object' &&
     environmentState !== null &&
     !Array.isArray(environmentState) &&
-    initialSoilMoisture === undefined &&
-    environmentState.environmentState !== undefined
+    initialSoilMoisture === undefined
   ) {
-    env = environmentState.environmentState;
-    startMoisture = environmentState.initialSoilMoisture;
-    opts = { ...environmentState };
-    delete opts.environmentState;
-    delete opts.initialSoilMoisture;
+    if (environmentState.environmentState !== undefined) {
+      env = environmentState.environmentState;
+      startMoisture = environmentState.initialSoilMoisture;
+      opts = { ...environmentState };
+      delete opts.environmentState;
+      delete opts.initialSoilMoisture;
+    } else {
+      if (typeof environmentState.initialSoilMoisture === 'number') {
+        startMoisture = environmentState.initialSoilMoisture;
+      } else if (typeof environmentState.soilMoisture === 'number') {
+        startMoisture = environmentState.soilMoisture;
+      } else if (typeof environmentState.currentSoilMoisture === 'number') {
+        startMoisture = environmentState.currentSoilMoisture;
+      }
+      opts = { ...environmentState };
+    }
   }
 
-  // Fallback: If initialSoilMoisture is not passed as 2nd arg, check env.soilMoisture
-  if (startMoisture === undefined && env && typeof env.soilMoisture === 'number') {
-    startMoisture = env.soilMoisture;
+  // Fallback: If initialSoilMoisture is not passed as 2nd arg, check env properties
+  if (startMoisture === undefined && env && typeof env === 'object') {
+    if (typeof env.soilMoisture === 'number') {
+      startMoisture = env.soilMoisture;
+    } else if (typeof env.initialSoilMoisture === 'number') {
+      startMoisture = env.initialSoilMoisture;
+    } else if (typeof env.currentSoilMoisture === 'number') {
+      startMoisture = env.currentSoilMoisture;
+    }
+  }
+
+  // Support env.hourlyForecast as alias for env.forecast
+  if (env && typeof env === 'object' && !env.forecast && Array.isArray(env.hourlyForecast)) {
+    env = { ...env, forecast: env.hourlyForecast };
   }
 
   // 1. Validate starting moisture (Requirement: identical initial moisture for both)
@@ -658,6 +685,7 @@ export function compareIrrigation(environmentState, initialSoilMoisture, options
       decisionTime,
       forecastWindowHours: validConfig.forecastWindowHours,
       forecastStatus: forecastAware.forecastStatus,
+      totalRainMm: forecastAware.totalRainMm,
       location: env?.location || null,
     },
     conventional: {
@@ -674,11 +702,13 @@ export function compareIrrigation(environmentState, initialSoilMoisture, options
       projectedMoisture: forecastAware.projectedMoisture,
       fallbackApplied: forecastAware.fallbackApplied,
       forecastStatus: forecastAware.forecastStatus,
+      totalRainMm: forecastAware.totalRainMm,
       reason: forecastAware.reason,
     },
     comparison: {
       waterSavedMm,
       waterSavedPercent,
+      totalRainMm: forecastAware.totalRainMm,
       recommendation,
       summary,
     },

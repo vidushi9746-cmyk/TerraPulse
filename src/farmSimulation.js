@@ -173,8 +173,6 @@ export function estimateSoilMoisture(
   };
 }
 
-
-
 /**
  * Returns the soil saturation category.
  */

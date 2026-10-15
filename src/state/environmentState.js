@@ -1,0 +1,15 @@
+export const initialEnvironmentState = {
+  location: 'Bengaluru',
+  latitude: 12.97,
+  longitude: 77.59,
+  temperature: null,
+  humidity: null,
+  windSpeed: null,
+  precipitation: null,
+  weatherCode: null,
+  weatherState: 'unknown',
+  forecast: [],
+  updatedAt: null,
+  source: 'Open-Meteo',
+  dataMode: 'live',
+};
