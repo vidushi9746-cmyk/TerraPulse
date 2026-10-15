@@ -207,6 +207,29 @@ export function getIrrigationRecommendation(soilMoisturePct) {
   return 'hold';
 }
 
+export function getIrrigationDetails(soilMoisturePct) {
+  const status = getSaturationStatus(soilMoisturePct);
+
+  if (status === 'dry') {
+    return {
+      action: 'irrigate',
+      reason: 'Soil moisture is low.',
+    };
+  }
+
+  if (status === 'moist') {
+    return {
+      action: 'monitor',
+      reason: 'Soil moisture is moderate.',
+    };
+  }
+
+  return {
+    action: 'hold',
+    reason: 'Soil is already wet or saturated.',
+  };
+}
+
 /**
  * Simulates soil moisture changes over a weather interval.
  *
@@ -276,9 +299,7 @@ export function simulateSoilMoisture({
       rainfallImpactPct: 0,
       dryingLossPct: 0,
       saturationStatus: getSaturationStatus(previousSoilMoisturePct),
-      irrigationRecommendation: getIrrigationRecommendation(
-        previousSoilMoisturePct
-      ),
+      irrigation: getIrrigationDetails(previousSoilMoisturePct),
       dataMode: 'simulated',
       weatherDataAvailable: false,
       warnings,
@@ -308,8 +329,7 @@ export function simulateSoilMoisture({
     rainfallImpactPct,
     dryingLossPct,
     saturationStatus: getSaturationStatus(soilMoisturePct),
-    irrigationRecommendation:
-      getIrrigationRecommendation(soilMoisturePct),
+    irrigation: getIrrigationDetails(soilMoisturePct),
     dataMode: 'simulated',
     weatherDataAvailable: true,
     warnings: [],

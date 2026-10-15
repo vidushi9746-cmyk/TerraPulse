@@ -21,7 +21,8 @@ test('simulates soil moisture with valid weather data', () => {
     assert.equal(result.soilMoisturePct, 37.93);
     assert.equal(result.rainfallImpactPct, 8);
     assert.equal(result.saturationStatus, 'moist');
-    assert.equal(result.irrigationRecommendation, 'monitor');
+    assert.equal(result.irrigation.action, 'monitor');
+    assert.equal(result.irrigation.reason, 'Soil moisture is moderate.');
     assert.equal(result.weatherDataAvailable, true);
     assert.deepEqual(result.warnings, []);
 });
