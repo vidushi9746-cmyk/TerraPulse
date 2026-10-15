@@ -1,111 +1,181 @@
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  /* ==========================================================================
+     TerraPulse Agriculture — Warm Ivory + Cinematic Farmland Palette
+     - Warm ivory: #F5F0E6 (Dominant interface background & surface)
+     - Soft cream: #EAE2D2 (Cards, secondary containers, elevated panels)
+     - Deep pine: #243B2E (Compact navigation bar, primary buttons, accents)
+     - Muted sage: #879C7A (Borders, secondary tags, chart fills)
+     - Soft sage accent: #B8CBA8 (Highlights, active badges, status pills)
+     - Earthy brown: #A98562 (Warm soil/land details, natural warmth)
+     - Primary text: #263329 (High-contrast deep forest on ivory)
+     - Secondary text: #6F786D (Comfortable readable muted text)
+     ========================================================================== */
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  /* Exact Color Tokens */
+  --warm-ivory: #F5F0E6;
+  --soft-cream: #EAE2D2;
+  --deep-pine: #243B2E;
+  --muted-sage: #879C7A;
+  --soft-sage: #B8CBA8;
+  --earthy-brown: #A98562;
+  --primary-text: #263329;
+  --secondary-text: #6F786D;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
+  /* Surfaces (Warm Ivory & Soft Cream dominate) */
+  --bg-app: #F5F0E6;              /* Main background */
+  --bg-surface: #FFFFFF;          /* Pure card surface on warm ivory */
+  --bg-surface-cream: #EAE2D2;    /* Soft cream container surface */
+  --bg-surface-elevated: #FAF6EE; /* Light warm ivory card surface */
+  --bg-surface-subtle: #F0EAE0;   /* Muted warm surface */
+  --bg-hover: #E4DBD0;            /* Subtle warm hover */
+  --bg-nav: #243B2E;              /* Deep Pine for top navigation */
+
+  /* Primary Brand Palettes */
+  --pine: #243B2E;
+  --pine-light: #2E4939;
+  --pine-dark: #1A2C22;
+  --sage: #879C7A;
+  --sage-light: #9BB08E;
+  --sage-dim: rgba(135, 156, 122, 0.18);
+  --sage-border: rgba(135, 156, 122, 0.4);
+
+  /* Highlights & Accents */
+  --highlight: #879C7A;           /* Muted sage */
+  --highlight-soft: #B8CBA8;      /* Soft sage accent */
+  --highlight-dim: rgba(184, 203, 168, 0.22);
+  --highlight-border: rgba(135, 156, 122, 0.45);
+
+  /* Earthy Warmth */
+  --earth: #A98562;
+  --earth-dim: rgba(169, 133, 98, 0.15);
+  --earth-border: rgba(169, 133, 98, 0.35);
+
+  /* Accessible Warning & Error & Sky */
+  --amber: #C9822C;
+  --amber-dim: rgba(201, 130, 44, 0.14);
+  --amber-border: rgba(201, 130, 44, 0.35);
+
+  --rose: #C25444;
+  --rose-dim: rgba(194, 84, 68, 0.14);
+  --rose-border: rgba(194, 84, 68, 0.35);
+
+  --sky: #4A8EA8;
+  --sky-dim: rgba(74, 142, 168, 0.14);
+  --sky-border: rgba(74, 142, 168, 0.35);
+
+  /* Typography Colors */
+  --text-primary: #263329;        /* Primary high-contrast text on ivory */
+  --text-secondary: #6F786D;      /* Secondary muted readable text */
+  --text-muted: #8E998B;          /* Darker muted caption / metadata */
+  --text-on-dark: #F5F0E6;        /* Warm ivory text on deep pine surfaces */
+  --text-inverse: #F5F0E6;
+
+  /* Subtle Warm Sage Borders */
+  --border-subtle: rgba(135, 156, 122, 0.28);
+  --border-medium: rgba(135, 156, 122, 0.45);
+  --border-accent: rgba(36, 59, 46, 0.2);
+  --border-active: #879C7A;
+
+  /* Typography */
+  --font-display: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Radii (Restrained & Soft) */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-full: 9999px;
+
+  /* Subtle Soft Warm Shadows */
+  --shadow-subtle: 0 1px 4px rgba(36, 59, 46, 0.05);
+  --shadow-card: 0 4px 16px rgba(36, 59, 46, 0.06), 0 1px 3px rgba(36, 59, 46, 0.04);
+  --shadow-hover: 0 8px 24px rgba(36, 59, 46, 0.1), 0 2px 6px rgba(36, 59, 46, 0.04);
+
+  font-family: var(--font-sans);
+  color-scheme: light;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  margin: 0;
+  min-height: 100vh;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(ellipse 75% 45% at 50% 0%, rgba(184, 203, 168, 0.25), transparent 70%),
+    radial-gradient(circle at 12% 88%, rgba(169, 133, 98, 0.08), transparent 45%),
+    radial-gradient(circle at 88% 22%, rgba(135, 156, 122, 0.1), transparent 40%),
+    url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 30 Q 30 15, 60 30 T 120 30 M0 60 Q 30 45, 60 60 T 120 60 M0 90 Q 30 75, 60 90 T 120 90' fill='none' stroke='%23879C7A' stroke-width='0.65' stroke-opacity='0.12'/%3E%3C/svg%3E");
 }
 
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
+  width: 100%;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+/* Typography Hierarchy */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.015em;
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
+p, span, label, input, select, button, a {
+  font-family: var(--font-sans);
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
+/* Clean Soft Scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-app);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(135, 156, 122, 0.4);
   border-radius: 4px;
-  color: var(--text-h);
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-sage);
+}
+
+/* Base Utility Classes */
+.text-highlight { color: var(--muted-sage); }
+.text-lime { color: var(--muted-sage); }
+.text-sage { color: var(--muted-sage); }
+.text-emerald { color: var(--muted-sage); }
+.text-sky { color: var(--sky); }
+.text-amber { color: var(--amber); }
+.text-rose { color: var(--rose); }
+.text-earth { color: var(--earthy-brown); }
+.text-forest { color: var(--text-secondary); }
+.text-cream { color: var(--warm-ivory); }
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
 }

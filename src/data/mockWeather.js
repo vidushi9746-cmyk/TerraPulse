@@ -1,0 +1,205 @@
+/**
+ * TerraPulse Agriculture - Mock Weather & Telemetry Presets
+ * 
+ * NOTE: This file provides mock atmospheric and simulated farm estimates
+ * for Member 1 frontend development and 3D environment rendering.
+ * Real weather API integration will be provided by Member 2.
+ */
+
+export const MOCK_LOCATIONS = [
+  {
+    id: 'or-willamette',
+    name: 'Willamette Valley Field 04',
+    region: 'Oregon, USA',
+    coordinates: '45.1248° N, 123.0872° W',
+    elevation: '68 m',
+    cropType: 'Winter Wheat & Mixed Veg',
+    soilType: 'Willakenzie Loamy Silt',
+    zones: 4,
+  },
+];
+
+export const MOCK_WEATHER_DATA = {
+  sunny: {
+    id: 'sunny',
+    name: 'Sunny',
+    tagline: 'Clear Skies & Optimal Solar Irradiance',
+    condition: 'Golden Daylight',
+    tempC: 25.8,
+    tempF: 78.4,
+    humidity: 38,
+    windSpeedKmH: 9.2,
+    windDirection: 'NW',
+    precipitationRateMmH: 0.0,
+    solarIrradianceWm2: 840,
+    uvIndex: 7,
+    uvRating: 'High',
+    atmosphericPressureHpa: 1018,
+    dewPointC: 10.4,
+    
+    // Simulated farm estimates (Not real sensor data)
+    simulation: {
+      soilMoisturePercent: 36,
+      soilMoistureStatus: 'Drying (Depletion Phase)',
+      soilMoistureColor: '#f59e0b',
+      cropHealthScore: 97,
+      cropHealthStatus: 'Vigorous Vegetative Growth',
+      cropHealthColor: '#10b981',
+      soilTemperatureC: 21.5,
+      evapotranspirationRateMmDay: 4.8,
+      irrigationAction: 'SCHEDULED',
+      irrigationActionColor: '#3b82f6',
+      irrigationRecommendation:
+        'Initiate automated drip irrigation cycle at 18:30 (30 min duration). Optimal absorption after peak irradiance.',
+      waterPreservedTodayGal: 0,
+      activeZones: '4 / 4 Zones Ready',
+    },
+    
+    // 3D Scene environmental parameters
+    scene: {
+      skyColor: '#5fa8e8',
+      horizonColor: '#d6e9f8',
+      fogColor: '#b0d4f1',
+      fogNear: 60,
+      fogFar: 280,
+      sunColor: '#fff7db',
+      sunIntensity: 2.8,
+      sunPosition: [38, 28, 20],
+      ambientColor: '#dbeafe',
+      ambientIntensity: 0.82,
+      hemiSkyColor: '#a5d0f5',
+      hemiGroundColor: '#3d3428',
+      hemiIntensity: 0.58,
+      cloudColor: '#ffffff',
+      cloudOpacity: 0.76,
+      cloudCount: 6,
+      rainActive: false,
+      soilWetness: 0.08,
+      soilBaseColor: '#3d2817',
+      soilHighlightColor: '#5c3d24',
+      lightTone: '#fff2cb',
+    },
+  },
+
+  cloudy: {
+    id: 'cloudy',
+    name: 'Cloudy',
+    tagline: 'Diffused Solar Cover & Stable Moisture',
+    condition: 'Overcast & Diffused',
+    tempC: 19.4,
+    tempF: 66.9,
+    humidity: 64,
+    windSpeedKmH: 14.8,
+    windDirection: 'WNW',
+    precipitationRateMmH: 0.1,
+    solarIrradianceWm2: 320,
+    uvIndex: 3,
+    uvRating: 'Moderate',
+    atmosphericPressureHpa: 1013,
+    dewPointC: 12.2,
+
+    // Simulated farm estimates
+    simulation: {
+      soilMoisturePercent: 54,
+      soilMoistureStatus: 'Balanced & Steady',
+      soilMoistureColor: '#10b981',
+      cropHealthScore: 94,
+      cropHealthStatus: 'Healthy & Balanced',
+      cropHealthColor: '#10b981',
+      soilTemperatureC: 18.2,
+      evapotranspirationRateMmDay: 2.1,
+      irrigationAction: 'STANDBY',
+      irrigationActionColor: '#8b5cf6',
+      irrigationRecommendation:
+        'Irrigation on standby. Low evapotranspiration rate minimizes root zone depletion. Moisture sufficient for next 14 hours.',
+      waterPreservedTodayGal: 160,
+      activeZones: 'Standby Monitoring',
+    },
+
+    // 3D Scene environmental parameters
+    scene: {
+      skyColor: '#7d8e9b',
+      horizonColor: '#a8b8c4',
+      fogColor: '#8ea0ad',
+      fogNear: 28,
+      fogFar: 140,
+      sunColor: '#e2ebf2',
+      sunIntensity: 1.25,
+      sunPosition: [14, 18, 10],
+      ambientColor: '#a1b4c4',
+      ambientIntensity: 0.85,
+      hemiSkyColor: '#a1b4c4',
+      hemiGroundColor: '#3c342d',
+      hemiIntensity: 0.55,
+      cloudColor: '#cfd8df',
+      cloudOpacity: 0.92,
+      cloudCount: 8,
+      rainActive: false,
+      soilWetness: 0.28,
+      soilBaseColor: '#332013',
+      soilHighlightColor: '#47301f',
+      lightTone: '#dbe4eb',
+    },
+  },
+
+  rainy: {
+    id: 'rainy',
+    name: 'Rainy',
+    tagline: 'Natural Precipitation & Deep Soil Hydration',
+    condition: 'Active Precipitation',
+    tempC: 14.6,
+    tempF: 58.3,
+    humidity: 91,
+    windSpeedKmH: 22.4,
+    windDirection: 'SW',
+    precipitationRateMmH: 6.8,
+    solarIrradianceWm2: 95,
+    uvIndex: 1,
+    uvRating: 'Low',
+    atmosphericPressureHpa: 1004,
+    dewPointC: 13.1,
+
+    // Simulated farm estimates
+    simulation: {
+      soilMoisturePercent: 84,
+      soilMoistureStatus: 'Saturated (Natural Intake)',
+      soilMoistureColor: '#0ea5e9',
+      cropHealthScore: 96,
+      cropHealthStatus: 'Deeply Hydrated',
+      cropHealthColor: '#10b981',
+      soilTemperatureC: 15.0,
+      evapotranspirationRateMmDay: 0.6,
+      irrigationAction: 'SUPPRESSED',
+      irrigationActionColor: '#ef4444',
+      irrigationRecommendation:
+        'Automated irrigation completely suppressed. Natural precipitation replenishes root zone. Estimated 480 gallons saved today.',
+      waterPreservedTodayGal: 480,
+      activeZones: 'Valves Locked (Rain Override)',
+    },
+
+    // 3D Scene environmental parameters (Cloudy daylight with active rain)
+    scene: {
+      skyColor: '#7a8e9e',
+      horizonColor: '#9fb1be',
+      fogColor: '#8ca0ae',
+      fogNear: 35,
+      fogFar: 180,
+      sunColor: '#e5eef5',
+      sunIntensity: 1.25,
+      sunPosition: [14, 20, 10],
+      ambientColor: '#9cb0bf',
+      ambientIntensity: 0.95,
+      hemiSkyColor: '#9cb0bf',
+      hemiGroundColor: '#3a332a',
+      hemiIntensity: 0.65,
+      cloudColor: '#d2dbe2',
+      cloudOpacity: 0.88,
+      cloudCount: 9,
+      rainActive: true,
+      soilWetness: 0.75,
+      soilBaseColor: '#281a10',
+      soilHighlightColor: '#3d281a',
+      lightTone: '#dce6ed',
+    },
+  },
+};
