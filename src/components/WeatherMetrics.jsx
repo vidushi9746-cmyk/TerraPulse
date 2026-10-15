@@ -32,9 +32,9 @@ export function WeatherMetrics({ weatherData, location }) {
           ? `${weatherData.humidity}%`
           : '--',
       subvalue:
-        weatherData.dewPointC !== null && weatherData.dewPointC !== undefined
-          ? `Dew Point: ${weatherData.dewPointC}°C`
-          : '--',
+        weatherData.atmosphericPressureHpa !== null && weatherData.atmosphericPressureHpa !== undefined
+          ? `Pressure: ${Math.round(weatherData.atmosphericPressureHpa)} hPa • Dew Point: ${weatherData.dewPointC ?? '--'}°C`
+          : (weatherData.dewPointC !== null && weatherData.dewPointC !== undefined ? `Dew Point: ${weatherData.dewPointC}°C` : '--'),
       icon: Droplets,
       iconColor: '#89C2D9',
     },
@@ -45,7 +45,9 @@ export function WeatherMetrics({ weatherData, location }) {
         weatherData.windSpeedKmH !== null && weatherData.windSpeedKmH !== undefined
           ? `${weatherData.windSpeedKmH} km/h`
           : '--',
-      subvalue: `Vector: ${weatherData.windDirection || 'NW'}`,
+      subvalue: weatherData.windDirection
+        ? `Vector: ${weatherData.windDirection}${weatherData.windDirectionDeg !== null && weatherData.windDirectionDeg !== undefined ? ` (${Math.round(weatherData.windDirectionDeg)}°)` : ''}`
+        : 'Vector: Unavailable',
       icon: Wind,
       iconColor: '#AEBCAF',
     },
@@ -56,11 +58,15 @@ export function WeatherMetrics({ weatherData, location }) {
       value:
         weatherData.precipitationRateMmH > 0
           ? `${weatherData.precipitationRateMmH.toFixed(1)} mm/h`
-          : `${weatherData.solarIrradianceWm2} W/m²`,
+          : (weatherData.solarIrradianceWm2 !== null && weatherData.solarIrradianceWm2 !== undefined
+              ? `${weatherData.solarIrradianceWm2} W/m²`
+              : 'Unavailable'),
       subvalue:
         weatherData.precipitationRateMmH > 0
           ? 'Active Rainfall'
-          : `UV: ${weatherData.uvIndex} (${weatherData.uvRating})`,
+          : (weatherData.solarIrradianceWm2 !== null && weatherData.solarIrradianceWm2 !== undefined
+              ? `UV: ${weatherData.uvIndex ?? '--'} (${weatherData.uvRating ?? 'N/A'})`
+              : 'Radiation data unavailable'),
       icon: weatherData.precipitationRateMmH > 0 ? CloudRain : Sun,
       iconColor: weatherData.precipitationRateMmH > 0 ? '#89C2D9' : '#B8D6A0',
     },
