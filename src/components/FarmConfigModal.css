@@ -1,0 +1,512 @@
+/* ==========================================================================
+   TerraPulse Agriculture — Farm Configuration & Crop Management Modal
+   Theme: Warm Ivory & Deep Pine Precision Identity
+   ========================================================================== */
+
+.farm-config-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(36, 59, 46, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.farm-config-card {
+  width: 100%;
+  max-width: 760px;
+  max-height: 90vh;
+  background: #FFFFFF;
+  border: 1px solid rgba(135, 156, 122, 0.35);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 20px 50px rgba(36, 59, 46, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+  animation: scaleUp 0.18s ease;
+}
+
+/* Header */
+.config-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(135, 156, 122, 0.25);
+  background: #FAF6EE;
+  flex-shrink: 0;
+}
+
+.config-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.config-title {
+  margin: 0;
+  font-family: var(--font-display, inherit);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--primary-text);
+}
+
+.config-subtitle {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--secondary-text);
+}
+
+.config-close-btn {
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(135, 156, 122, 0.3);
+  background: #FFFFFF;
+  color: var(--secondary-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.config-close-btn:hover {
+  background: var(--soft-cream);
+  color: var(--deep-pine);
+  border-color: var(--deep-pine);
+}
+
+/* Validation Errors */
+.config-errors-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 16px 24px 0;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(194, 84, 68, 0.1);
+  border: 1px solid rgba(194, 84, 68, 0.3);
+  color: var(--rose, #C25444);
+  font-size: 0.78rem;
+}
+
+.errors-heading {
+  font-weight: 700;
+  display: block;
+  margin-bottom: 4px;
+  color: var(--rose, #C25444);
+}
+
+.errors-list ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.errors-list li {
+  margin-bottom: 2px;
+}
+
+/* Body */
+.config-modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  background: #FFFFFF;
+}
+
+.config-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.section-heading {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary-text);
+}
+
+.section-subtext {
+  margin: 2px 0 0;
+  font-size: 0.74rem;
+  color: var(--secondary-text);
+}
+
+/* 2-Column Grid */
+.config-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 640px) {
+  .config-grid-2col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.full-width-field {
+  grid-column: 1 / -1;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--primary-text);
+}
+
+.area-input-composite {
+  display: flex;
+  gap: 8px;
+}
+
+.area-number-input {
+  flex: 1;
+}
+
+.area-unit-select {
+  width: 180px;
+}
+
+.form-input,
+.form-select {
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(135, 156, 122, 0.35);
+  background: #FAF6EE;
+  color: var(--primary-text);
+  font-size: 0.82rem;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-input:focus,
+.form-select:focus {
+  border-color: var(--deep-pine);
+  box-shadow: 0 0 0 2px rgba(36, 59, 46, 0.12);
+  background: #FFFFFF;
+}
+
+.form-helper-text {
+  font-size: 0.7rem;
+  color: var(--secondary-text);
+  line-height: 1.4;
+}
+
+/* Plots */
+.btn-add-plot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: var(--soft-cream);
+  border: 1px solid rgba(135, 156, 122, 0.4);
+  color: var(--deep-pine);
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-add-plot:hover {
+  background: var(--deep-pine);
+  color: #F5F0E6;
+}
+
+.plots-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  border: 1px dashed rgba(135, 156, 122, 0.45);
+  border-radius: 12px;
+  background: #FAF6EE;
+  text-align: center;
+  gap: 8px;
+}
+
+.empty-title {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--primary-text);
+}
+
+.empty-desc {
+  margin: 0 0 8px;
+  font-size: 0.76rem;
+  color: var(--secondary-text);
+  max-width: 420px;
+}
+
+.plots-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.plot-config-item {
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(135, 156, 122, 0.3);
+  background: #FAF6EE;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.plot-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.plot-item-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.plot-icon {
+  font-size: 1.25rem;
+}
+
+.plot-title-input {
+  flex: 1;
+  font-family: var(--font-display, inherit);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--primary-text);
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 4px 6px;
+  border-radius: 6px;
+  outline: none;
+}
+
+.plot-title-input:hover,
+.plot-title-input:focus {
+  border-color: rgba(135, 156, 122, 0.5);
+  background: #FFFFFF;
+}
+
+.btn-remove-plot {
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--secondary-text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-remove-plot:hover {
+  background: rgba(194, 84, 68, 0.12);
+  color: var(--rose, #C25444);
+  border-color: rgba(194, 84, 68, 0.3);
+}
+
+.plot-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 14px;
+}
+
+@media (min-width: 680px) {
+  .plot-fields-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .plot-fields-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+}
+
+.plot-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  width: 100%;
+}
+
+.field-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--secondary-text);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.field-select,
+.field-input {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(135, 156, 122, 0.35);
+  background: #FFFFFF;
+  color: var(--primary-text);
+  font-size: 0.78rem;
+  outline: none;
+  font-family: inherit;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field-select:focus,
+.field-input:focus {
+  border-color: var(--deep-pine);
+  box-shadow: 0 0 0 2px rgba(36, 59, 46, 0.12);
+}
+
+.plot-item-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(135, 156, 122, 0.28);
+}
+
+.plot-detail-chip {
+  font-size: 0.7rem;
+  color: var(--secondary-text);
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: #FFFFFF;
+  border: 1px solid rgba(135, 156, 122, 0.25);
+  line-height: 1.4;
+  max-width: 100%;
+  word-break: break-word;
+}
+
+.stage-chip {
+  color: var(--deep-pine);
+  background: rgba(184, 203, 168, 0.35);
+  border-color: rgba(135, 156, 122, 0.4);
+}
+
+/* Footer */
+.config-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-top: 1px solid rgba(135, 156, 122, 0.25);
+  background: #FAF6EE;
+  gap: 12px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.btn-reset-config {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(135, 156, 122, 0.4);
+  background: #FFFFFF;
+  color: var(--secondary-text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-reset-config:hover {
+  background: var(--soft-cream);
+  color: var(--primary-text);
+}
+
+.footer-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-cancel {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(135, 156, 122, 0.4);
+  background: #FFFFFF;
+  color: var(--secondary-text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-cancel:hover {
+  background: var(--soft-cream);
+  color: var(--primary-text);
+}
+
+.btn-apply-config {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 20px;
+  border-radius: 8px;
+  border: 1px solid var(--deep-pine);
+  background: var(--deep-pine);
+  color: #F5F0E6;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(36, 59, 46, 0.2);
+  transition: all 0.15s ease;
+}
+
+.btn-apply-config:hover {
+  background: var(--pine-light);
+  transform: translateY(-1px);
+}
