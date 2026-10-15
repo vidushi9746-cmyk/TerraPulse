@@ -35,16 +35,20 @@ export function ComparisonPanel({
         ? Math.round(waterSavedMm * farmAreaSqm)
         : reactive - forecastAwareVal;
 
+    const isZeroBaseline = hasEngineResult ? conventional?.waterAppliedMm === 0 : reactive === 0;
+
     const savingsPercent = hasEngineResult
         ? comparison.waterSavedPercent
         : reactive > 0
             ? (savedLitres / reactive) * 100
-            : 0;
+            : null;
 
     const rainMm = hasEngineResult
         ? typeof scenario?.totalRainMm === 'number'
             ? scenario.totalRainMm
-            : null
+            : typeof forecastAware?.totalRainMm === 'number'
+                ? forecastAware.totalRainMm
+                : null
         : typeof expectedRainMm === 'number'
             ? expectedRainMm
             : null;
@@ -101,11 +105,15 @@ export function ComparisonPanel({
                         </span>
                     </div>
                     <span className="delta-percent-sub">
-                        {savingsPercent > 0
-                            ? `${savingsPercent.toFixed(1)}% water saved by timing irrigation`
-                            : savingsPercent < 0
-                                ? `${Math.abs(savingsPercent).toFixed(1)}% more water used`
-                                : 'No net difference in water use'}
+                        {isZeroBaseline
+                            ? 'Savings: N/A (baseline water requirement is 0 L)'
+                            : savingsPercent !== null && typeof savingsPercent === 'number'
+                                ? savingsPercent > 0
+                                    ? `${savingsPercent.toFixed(1)}% water saved by timing irrigation`
+                                    : savingsPercent < 0
+                                        ? `${Math.abs(savingsPercent).toFixed(1)}% more water used`
+                                        : 'No net difference in water use'
+                                : 'Savings: N/A'}
                     </span>
                 </div>
             </div>

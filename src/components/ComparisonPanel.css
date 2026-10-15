@@ -5,10 +5,10 @@
 .comparison-panel {
   width: 100%;
   padding: 20px;
-  border: 1px solid rgba(135, 156, 122, 0.28);
+  border: 1px solid rgba(74, 109, 75, 0.25);
   border-radius: var(--radius-lg, 14px);
-  background: #FFFFFF;
-  color: var(--primary-text, #263329);
+  background: var(--bg-surface, #FAF5EB);
+  color: var(--primary-text, #222920);
   box-shadow: var(--shadow-card);
   box-sizing: border-box;
   font-family: inherit;
@@ -37,16 +37,16 @@
   font-family: var(--font-display, inherit);
   font-size: 1rem;
   font-weight: 700;
-  color: var(--primary-text, #263329);
+  color: var(--primary-text, #292E27);
 }
 
 .comparison-scenario-tag {
   display: inline-block;
   padding: 3px 10px;
   border-radius: 12px;
-  background: rgba(184, 203, 168, 0.35);
-  color: var(--deep-pine, #243B2E);
-  border: 1px solid rgba(135, 156, 122, 0.4);
+  background: rgba(183, 201, 107, 0.25);
+  color: var(--deep-pine, #183D2B);
+  border: 1px solid rgba(82, 118, 83, 0.35);
   font-size: 0.72rem;
   font-weight: 700;
 }
@@ -59,8 +59,8 @@
   gap: 14px;
   padding: 16px 20px;
   border-radius: var(--radius-md, 10px);
-  background: #FAF6EE;
-  border: 1px solid rgba(135, 156, 122, 0.35);
+  background: #EDE8DB;
+  border: 1px solid rgba(82, 118, 83, 0.28);
   flex-wrap: wrap;
 }
 
@@ -74,7 +74,7 @@
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.05em;
-  color: var(--secondary-text, #6F786D);
+  color: var(--secondary-text, #596155);
   text-transform: uppercase;
 }
 
@@ -88,12 +88,12 @@
   font-family: var(--font-display, inherit);
   font-size: 1.65rem;
   font-weight: 800;
-  color: var(--deep-pine, #243B2E);
+  color: var(--deep-pine, #183D2B);
 }
 
 .delta-volume {
   font-size: 0.85rem;
-  color: var(--secondary-text, #6F786D);
+  color: var(--secondary-text, #596155);
   font-weight: 500;
 }
 
@@ -113,9 +113,9 @@
 }
 
 .badge-favorable {
-  background: rgba(184, 203, 168, 0.4);
-  color: var(--deep-pine, #243B2E);
-  border: 1px solid rgba(135, 156, 122, 0.5);
+  background: rgba(183, 201, 107, 0.35);
+  color: var(--deep-pine, #183D2B);
+  border: 1px solid rgba(82, 118, 83, 0.4);
 }
 
 .badge-neutral {
@@ -151,19 +151,19 @@
 .strategy-card {
   padding: 14px 16px;
   border-radius: var(--radius-md, 10px);
-  border: 1px solid rgba(135, 156, 122, 0.25);
-  background: #FAF6EE;
+  border: 1px solid rgba(82, 118, 83, 0.25);
+  background: #EDE8DB;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
 .conventional-card {
-  border-left: 4px solid var(--muted-sage, #879C7A);
+  border-left: 4px solid var(--muted-sage, #527653);
 }
 
 .forecast-card {
-  border-left: 4px solid var(--deep-pine, #243B2E);
+  border-left: 4px solid var(--deep-pine, #183D2B);
 }
 
 .strategy-card-header {
@@ -176,7 +176,7 @@
 .strategy-name {
   font-size: 0.82rem;
   font-weight: 700;
-  color: var(--primary-text, #263329);
+  color: var(--primary-text, #292E27);
 }
 
 .decision-badge {
@@ -189,9 +189,9 @@
 }
 
 .badge-defer {
-  background: rgba(184, 203, 168, 0.35);
-  color: var(--deep-pine, #243B2E);
-  border: 1px solid rgba(135, 156, 122, 0.45);
+  background: rgba(183, 201, 107, 0.35);
+  color: var(--deep-pine, #183D2B);
+  border: 1px solid rgba(82, 118, 83, 0.35);
 }
 
 .badge-reduce {

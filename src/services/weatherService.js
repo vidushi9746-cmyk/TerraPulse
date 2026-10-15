@@ -60,6 +60,42 @@ export function getWeatherState(code) {
 }
 
 /**
+ * Converts a wind direction in degrees (0-360) to a 16-wind compass point.
+ *
+ * @param {number|null|undefined} degrees - Wind direction in degrees (0° = North, 90° = East).
+ * @returns {string|null} Compass direction code (e.g., 'N', 'NW', 'SSW') or null if invalid.
+ */
+export function degreesToCompass(degrees) {
+  if (typeof degrees !== 'number' || !Number.isFinite(degrees)) {
+    return null;
+  }
+  const normalized = ((degrees % 360) + 360) % 360;
+  const sectors = [
+    'N', 'NNE', 'NE', 'ENE',
+    'E', 'ESE', 'SE', 'SSE',
+    'S', 'SSW', 'SW', 'WSW',
+    'W', 'WNW', 'NW', 'NNW',
+  ];
+  const index = Math.round(normalized / 22.5) % 16;
+  return sectors[index];
+}
+
+/**
+ * Safely formats a precipitation rate value in mm/h.
+ * Returns formatted string like "0.0 mm/h" for valid numbers, or fallback ("Unavailable") for null/undefined/non-finite.
+ *
+ * @param {number|null|undefined} rate - Precipitation rate in mm/h
+ * @param {string} [fallback='Unavailable'] - Fallback label when rate is unavailable
+ * @returns {string} Formatted precipitation rate or fallback
+ */
+export function formatPrecipitationRate(rate, fallback = 'Unavailable') {
+  if (typeof rate === 'number' && Number.isFinite(rate)) {
+    return `${rate.toFixed(1)} mm/h`;
+  }
+  return fallback;
+}
+
+/**
  * Validates geographic coordinates.
  *
  * @param {number} latitude - Latitude in degrees (-90 to 90).
@@ -117,7 +153,7 @@ export async function fetchCurrentWeather(latitude, longitude) {
   url.searchParams.set('longitude', longitude.toString());
   url.searchParams.set(
     'current',
-    'temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation,weather_code'
+    'temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m,surface_pressure,precipitation,weather_code,shortwave_radiation,soil_temperature_6cm'
   );
   url.searchParams.set('timezone', 'auto');
 
@@ -192,6 +228,30 @@ export async function fetchCurrentWeather(latitude, longitude) {
       ? current.wind_speed_10m
       : null;
 
+  const windDirection =
+    typeof current.wind_direction_10m === 'number' &&
+      Number.isFinite(current.wind_direction_10m)
+      ? current.wind_direction_10m
+      : null;
+
+  const pressure =
+    typeof current.surface_pressure === 'number' &&
+      Number.isFinite(current.surface_pressure)
+      ? current.surface_pressure
+      : null;
+
+  const solarRadiation =
+    typeof current.shortwave_radiation === 'number' &&
+      Number.isFinite(current.shortwave_radiation)
+      ? current.shortwave_radiation
+      : null;
+
+  const soilTemperature =
+    typeof current.soil_temperature_6cm === 'number' &&
+      Number.isFinite(current.soil_temperature_6cm)
+      ? current.soil_temperature_6cm
+      : null;
+
   const precipitation =
     typeof current.precipitation === 'number' && Number.isFinite(current.precipitation)
       ? current.precipitation
@@ -208,6 +268,10 @@ export async function fetchCurrentWeather(latitude, longitude) {
     temperature,
     humidity,
     windSpeed,
+    windDirection,
+    pressure,
+    solarRadiation,
+    soilTemperature,
     precipitation,
     weatherCode,
     weatherState,

@@ -171,6 +171,179 @@ export function convertDepthToLitres(depthMm, areaSqm) {
 }
 
 /**
+ * Resolves crop-specific irrigation thresholds for a single plot based on its crop configuration and growth stage.
+ *
+ * @param {Object} plot - Plot object containing cropType and growthStage
+ * @returns {{
+ *   crop: Object | null,
+ *   stage: Object | null,
+ *   dryThreshold: number | null,
+ *   targetMoisture: number | null,
+ *   isSupported: boolean,
+ *   error?: string
+ * }}
+ */
+export function calculatePlotThresholds(plot) {
+  if (!plot || typeof plot !== 'object') {
+    return {
+      crop: null,
+      stage: null,
+      dryThreshold: null,
+      targetMoisture: null,
+      isSupported: false,
+      error: 'Invalid or missing plot object.',
+    };
+  }
+
+  const crop = SUPPORTED_CROPS[plot.cropType];
+  if (!crop) {
+    return {
+      crop: null,
+      stage: null,
+      dryThreshold: null,
+      targetMoisture: null,
+      isSupported: false,
+      error: `Unsupported crop type: "${plot.cropType}".`,
+    };
+  }
+
+  const stage = GROWTH_STAGES[plot.growthStage];
+  const waterAdjustment = stage ? stage.waterAdjustment : 0;
+
+  const rawDry = crop.baseDryThreshold + waterAdjustment;
+  const rawTarget = crop.baseTargetMoisture + waterAdjustment;
+
+  const dryThreshold = Math.min(48, Math.max(25, rawDry));
+  const targetMoisture = Math.min(75, Math.max(dryThreshold + 10, rawTarget));
+
+  return {
+    crop,
+    stage: stage || null,
+    dryThreshold,
+    targetMoisture,
+    isSupported: true,
+  };
+}
+
+/**
+ * Stage sensitivity multiplier for moisture deficit stress.
+ * Reproductive/bloom phases (flowering) have peak water deficit sensitivity.
+ */
+const STAGE_STRESS_SENSITIVITY = Object.freeze({
+  seedling: 1.1,
+  vegetative: 1.0,
+  flowering: 1.3,
+  maturation: 0.85,
+});
+
+/**
+ * Estimates canopy health score and status for a specific crop plot based on root-zone soil moisture.
+ *
+ * NOTE: This is a deterministic teaching digital twin estimate based on root-zone soil moisture relative
+ * to crop-specific water deficit thresholds and growth stage sensitivity. It is NOT a physical
+ * multispectral NDVI sensor probe.
+ *
+ * @param {Object} plot - Plot object containing cropType and growthStage
+ * @param {number} soilMoisture - Current volumetric soil moisture percentage (0-100)
+ * @returns {{
+ *   score: number | null,
+ *   status: string,
+ *   color: string,
+ *   isSupported: boolean,
+ *   isEstimate: boolean,
+ *   dryThreshold: number | null,
+ *   targetMoisture: number | null,
+ *   optimalMoisture: number | null,
+ *   assumptionNote: string
+ * }}
+ */
+export function estimateCropCanopyHealth(plot, soilMoisture) {
+  if (!plot || typeof plot !== 'object') {
+    return {
+      score: null,
+      status: 'N/A (Fallow Soil)',
+      color: '#888888',
+      isSupported: false,
+      isEstimate: true,
+      dryThreshold: null,
+      targetMoisture: null,
+      optimalMoisture: null,
+      assumptionNote: 'No crop planted in this furrow (fallow soil).',
+    };
+  }
+
+  const thresholds = calculatePlotThresholds(plot);
+  if (!thresholds.isSupported) {
+    return {
+      score: null,
+      status: 'N/A (Unsupported Crop)',
+      color: '#888888',
+      isSupported: false,
+      isEstimate: true,
+      dryThreshold: null,
+      targetMoisture: null,
+      optimalMoisture: null,
+      assumptionNote: thresholds.error || 'Unsupported crop type.',
+    };
+  }
+
+  const moisture =
+    typeof soilMoisture === 'number' && Number.isFinite(soilMoisture)
+      ? Math.min(100, Math.max(0, soilMoisture))
+      : 34.0;
+
+  const { dryThreshold, targetMoisture, stage } = thresholds;
+  const optimalMoisture = Math.round(((dryThreshold + targetMoisture) / 2) * 10) / 10;
+  const span = targetMoisture - dryThreshold;
+  const sensitivity = (stage && STAGE_STRESS_SENSITIVITY[stage.id]) || 1.0;
+
+  let rawScore;
+
+  if (moisture >= dryThreshold && moisture <= targetMoisture + 8) {
+    // Optimal / comfortable hydration range
+    const distFromMid = Math.abs(moisture - optimalMoisture);
+    const fraction = distFromMid / (span / 2 + 6);
+    rawScore = Math.round(98 - Math.min(1, fraction) * 5); // 93 - 98
+  } else if (moisture < dryThreshold) {
+    // Moisture deficit stress
+    const deficit = dryThreshold - moisture;
+    const deficitRatio = deficit / Math.max(1, dryThreshold);
+    const stressImpact = deficitRatio * 65 * sensitivity;
+    rawScore = Math.round(93 - stressImpact);
+  } else {
+    // Moisture surplus / over-saturation (anoxia stress)
+    const surplus = moisture - (targetMoisture + 8);
+    rawScore = Math.round(93 - surplus * 0.85);
+  }
+
+  const score = Math.max(30, Math.min(99, rawScore));
+
+  const status =
+    score > 90
+      ? 'Optimal Canopy Health'
+      : score > 75
+      ? 'Stable Growth'
+      : score > 50
+      ? 'Hydration Stress'
+      : 'Severe Drought Wilting';
+
+  const color =
+    score > 85 ? '#B8D6A0' : score > 65 ? '#E0A94F' : '#D96B5B';
+
+  return {
+    score,
+    status,
+    color,
+    isSupported: true,
+    isEstimate: true,
+    dryThreshold,
+    targetMoisture,
+    optimalMoisture,
+    assumptionNote: 'Deterministic agronomic model based on root-zone soil moisture relative to crop-specific water deficit thresholds and growth stage sensitivity.',
+  };
+}
+
+/**
  * Computes average irrigation threshold parameters based on configured crops.
  *
  * NOTE: These are conservative teaching rules intended for illustrative digital twins,
@@ -188,27 +361,32 @@ export function deriveCropIrrigationThresholds(plots = []) {
     };
   }
 
+  // Handle missing or unsupported crop configurations explicitly rather than silently assigning an arbitrary crop
+  const validPlots = plots.filter((p) => p && typeof p === 'object' && SUPPORTED_CROPS[p.cropType]);
+  if (validPlots.length === 0) {
+    return {
+      dryThreshold: 35,
+      targetMoisture: 60,
+      assumptionNote: 'Default baseline thresholds applied (no supported active crops configured).',
+    };
+  }
+
   let totalDry = 0;
   let totalTarget = 0;
 
-  for (const plot of plots) {
-    const crop = SUPPORTED_CROPS[plot.cropType] || SUPPORTED_CROPS.wheat;
-    const stage = GROWTH_STAGES[plot.growthStage] || GROWTH_STAGES.vegetative;
-
-    const adjustedDry = crop.baseDryThreshold + stage.waterAdjustment;
-    const adjustedTarget = crop.baseTargetMoisture + stage.waterAdjustment;
-
-    totalDry += adjustedDry;
-    totalTarget += adjustedTarget;
+  for (const plot of validPlots) {
+    const { dryThreshold, targetMoisture } = calculatePlotThresholds(plot);
+    totalDry += dryThreshold;
+    totalTarget += targetMoisture;
   }
 
-  const dryThreshold = Math.round((totalDry / plots.length) * 10) / 10;
-  const targetMoisture = Math.round((totalTarget / plots.length) * 10) / 10;
+  const dryThreshold = Math.round((totalDry / validPlots.length) * 10) / 10;
+  const targetMoisture = Math.round((totalTarget / validPlots.length) * 10) / 10;
 
   return {
     dryThreshold: Math.min(48, Math.max(25, dryThreshold)),
     targetMoisture: Math.min(75, Math.max(dryThreshold + 10, targetMoisture)),
-    assumptionNote: `Thresholds weighted across ${plots.length} active plot(s) based on crop sensitivity and vegetative growth stage.`,
+    assumptionNote: `Thresholds weighted across ${validPlots.length} active plot(s) based on crop sensitivity and vegetative growth stage.`,
   };
 }
 

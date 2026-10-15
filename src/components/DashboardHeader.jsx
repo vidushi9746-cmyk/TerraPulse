@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { TerraPulseLogo } from './TerraPulseLogo';
 import {
   MapPin,
   ArrowLeft,
@@ -132,30 +133,7 @@ export function DashboardHeader({
         {/* Brand Logo & Title */}
         <div className="header-brand-block">
           <div className="brand-logo">
-            <svg
-              className="brand-icon-svg"
-              viewBox="0 0 32 32"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M16 3C16 3 8 9 8 18C8 22.4183 11.5817 26 16 26C20.4183 26 24 22.4183 24 18C24 9 16 3 16 3Z"
-                fill="url(#header-leaf-grad)"
-              />
-              <path
-                d="M16 11V21M12 17L16 21L20 15"
-                stroke="#B8D6A0"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <defs>
-                <linearGradient id="header-leaf-grad" x1="8" y1="3" x2="24" y2="26" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#24392C" />
-                  <stop offset="1" stopColor="#304B39" />
-                </linearGradient>
-              </defs>
-            </svg>
+            <TerraPulseLogo variant="icon" size={32} theme="dark" />
           </div>
           <div className="brand-title-row">
             <h1 className="brand-title">TerraPulse</h1>

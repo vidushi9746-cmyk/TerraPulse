@@ -1,6 +1,11 @@
 import assert from 'node:assert';
 import { describe, it } from 'node:test';
-import { estimateSoilMoisture } from './farmSimulation.js';
+import {
+  estimateSoilMoisture,
+  simulateSoilMoisture,
+  getSaturationStatus,
+  getIrrigationRecommendation,
+} from './farmSimulation.js';
 import { compareIrrigation } from './irrigationEngine.js';
 
 describe('Farm Simulation & Integration Test Suite', () => {
@@ -121,5 +126,74 @@ describe('Farm Simulation & Integration Test Suite', () => {
     // Water saved
     assert.strictEqual(comparison.comparison.waterSavedMm, 56.0);
     assert.strictEqual(comparison.comparison.recommendation, 'FORECAST_AWARE');
+  });
+
+  describe('Soil Moisture Simulation Functions (H578-dot Model)', () => {
+    it('simulates soil moisture with valid weather data', () => {
+      const result = simulateSoilMoisture({
+        precipitationMm: 10,
+        temperatureC: 25,
+        relativeHumidityPct: 50,
+        previousSoilMoisturePct: 30,
+        elapsedHours: 1,
+      });
+
+      assert.strictEqual(result.soilMoisturePct, 37.93);
+      assert.strictEqual(result.rainfallImpactPct, 8);
+      assert.strictEqual(result.saturationStatus, 'moist');
+      assert.strictEqual(result.irrigation.action, 'monitor');
+      assert.strictEqual(result.irrigation.reason, 'Soil moisture is moderate.');
+      assert.strictEqual(result.weatherDataAvailable, true);
+      assert.deepStrictEqual(result.warnings, []);
+    });
+
+    it('preserves previous moisture when precipitation is missing', () => {
+      const result = simulateSoilMoisture({
+        precipitationMm: null,
+        temperatureC: 25,
+        relativeHumidityPct: 50,
+        previousSoilMoisturePct: 30,
+        elapsedHours: 1,
+      });
+
+      assert.strictEqual(result.soilMoisturePct, 30);
+      assert.strictEqual(result.weatherDataAvailable, false);
+      assert.ok(result.warnings.length > 0);
+    });
+
+    it('classifies soil saturation correctly', () => {
+      assert.strictEqual(getSaturationStatus(10), 'dry');
+      assert.strictEqual(getSaturationStatus(30), 'moist');
+      assert.strictEqual(getSaturationStatus(60), 'wet');
+      assert.strictEqual(getSaturationStatus(90), 'saturated');
+    });
+
+    it('recommends irrigation based on soil moisture', () => {
+      assert.strictEqual(getIrrigationRecommendation(10), 'irrigate');
+      assert.strictEqual(getIrrigationRecommendation(30), 'monitor');
+      assert.strictEqual(getIrrigationRecommendation(60), 'hold');
+      assert.strictEqual(getIrrigationRecommendation(90), 'hold');
+    });
+
+    it('rejects invalid starting soil moisture', () => {
+      assert.throws(
+        () =>
+          simulateSoilMoisture({
+            precipitationMm: 10,
+            temperatureC: 25,
+            relativeHumidityPct: 50,
+            previousSoilMoisturePct: 110,
+            elapsedHours: 1,
+          }),
+        RangeError
+      );
+    });
+
+    it('preserves the existing estimateSoilMoisture function', () => {
+      const result = estimateSoilMoisture(30, 25, 50, 0, 10);
+
+      assert.strictEqual(result.soilMoisture, 33.75);
+      assert.deepStrictEqual(result.warnings, []);
+    });
   });
 });

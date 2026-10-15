@@ -18,29 +18,68 @@ function CanvasLoader() {
   );
 }
 
-// Smooth Camera Controller for cinematic transitions between presets
-function SmoothCameraController({ targetViewRef, controlsRef }) {
-  useFrame(({ camera }, delta) => {
-    if (!targetViewRef.current) return;
+function easeInOutCubic(t) {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
 
-    // Smooth exponential damping for frame-rate-independent deceleration
-    const t = 1 - Math.exp(-delta * 4.5);
-    camera.position.lerp(targetViewRef.current.pos, t);
+// Dynamically resolve world-space coordinates of crops across the farm
+function getCropWorldPosition(rowIdOrCropId, farmConfig) {
+  if (farmConfig && Array.isArray(farmConfig.plots)) {
+    const foundPlot = farmConfig.plots.find(
+      (p) => p.rowId === rowIdOrCropId || p.id === rowIdOrCropId || p.cropType === rowIdOrCropId
+    );
+    if (foundPlot) {
+      if (Array.isArray(foundPlot.position)) {
+        return { x: foundPlot.position[0], y: foundPlot.position[1] ?? 0.45, z: foundPlot.position[2] };
+      }
+      if (typeof foundPlot.xPos === 'number' && typeof foundPlot.zPos === 'number') {
+        return { x: foundPlot.xPos, y: foundPlot.yPos ?? 0.45, z: foundPlot.zPos };
+      }
+    }
+  }
+  const rowPosMap = {
+    'row-1': { x: 7.0, y: 0.45, z: 3.5 },
+    'row-2': { x: -0.6, y: 0.45, z: 3.5 },
+    'row-3': { x: -0.6, y: 0.45, z: 8.8 },
+    'row-4': { x: 7.0, y: 0.45, z: 8.8 },
+    'wheat': { x: 7.0, y: 0.45, z: 3.5 },
+    'corn': { x: -0.6, y: 0.45, z: 3.5 },
+    'lettuce': { x: -0.6, y: 0.45, z: 8.8 },
+    'carrots': { x: 7.0, y: 0.45, z: 8.8 },
+    'sunflower': { x: -9.2, y: 0.5, z: 6.0 },
+    'sunflowers': { x: -9.2, y: 0.5, z: 6.0 },
+  };
+  return rowPosMap[rowIdOrCropId] || { x: 3.2, y: 0.45, z: 6.2 };
+}
 
-    // Smooth lerp OrbitControls target focal point
+// Smooth Camera Controller for polished 600–1000ms transitions
+function SmoothCameraController({ animRef, controlsRef }) {
+  useFrame(({ camera }) => {
+    const anim = animRef.current;
+    if (!anim) return;
+
+    const now = performance.now();
+    const elapsed = now - anim.startTime;
+    const progress = Math.min(1, Math.max(0, elapsed / anim.duration));
+    const t = easeInOutCubic(progress);
+
+    // Smoothly interpolate camera position
+    camera.position.lerpVectors(anim.startPos, anim.endPos, t);
+
+    // Smoothly interpolate OrbitControls target focal point
     if (controlsRef.current) {
-      controlsRef.current.target.lerp(targetViewRef.current.target, t);
+      controlsRef.current.target.lerpVectors(anim.startTarget, anim.endTarget, t);
       controlsRef.current.update();
     }
 
-    // Snap and finish transition when close enough
-    if (camera.position.distanceTo(targetViewRef.current.pos) < 0.04) {
-      camera.position.copy(targetViewRef.current.pos);
+    // Finish transition
+    if (progress >= 1) {
+      camera.position.copy(anim.endPos);
       if (controlsRef.current) {
-        controlsRef.current.target.copy(targetViewRef.current.target);
+        controlsRef.current.target.copy(anim.endTarget);
         controlsRef.current.update();
       }
-      targetViewRef.current = null;
+      animRef.current = null;
     }
   });
 
@@ -57,29 +96,67 @@ export function FarmCanvas({
   onPresetChange,
 }) {
   const controlsRef = useRef();
-  const targetViewRef = useRef(null);
+  const animRef = useRef(null);
+
+  // Trigger smooth cancellable camera navigation (600–1000ms duration)
+  const triggerTransition = useCallback((targetPos, targetLookAt, duration = 800) => {
+    if (!controlsRef.current) return;
+    const currentCamera = controlsRef.current.object;
+    const startPos = currentCamera.position.clone();
+    const startTarget = controlsRef.current.target.clone();
+
+    animRef.current = {
+      startPos,
+      endPos: targetPos.clone(),
+      startTarget,
+      endTarget: targetLookAt.clone(),
+      startTime: performance.now(),
+      duration: Math.max(600, Math.min(1000, duration)),
+    };
+  }, []);
+
+  // Smoothly move camera toward selected crop plot when a crop is selected
+  useEffect(() => {
+    if (!selectedRowId) return;
+
+    const pos = getCropWorldPosition(selectedRowId, farmConfig);
+    // Focus camera directly on the selected crop with natural perspective angle
+    const targetPos = new THREE.Vector3(pos.x + 4.2, 3.2, pos.z + 4.5);
+    const targetLookAt = new THREE.Vector3(pos.x, 0.65, pos.z);
+
+    triggerTransition(targetPos, targetLookAt, 800);
+  }, [selectedRowId, farmConfig, triggerTransition]);
 
   // Trigger smooth cinematic camera navigation when cameraPreset prop changes
-  const applyPreset = useCallback((preset) => {
-    let targetPos, targetLookAt;
+  const applyPreset = useCallback(
+    (preset) => {
+      let targetPos, targetLookAt;
 
-    if (preset === 'top') {
-      targetPos = new THREE.Vector3(0.01, 34.0, 0.05);
-      targetLookAt = new THREE.Vector3(-0.5, 0.5, 0);
-    } else if (preset === 'crops') {
-      targetPos = new THREE.Vector3(5.5, 4.5, 9.5);
-      targetLookAt = new THREE.Vector3(1.2, 0.8, 5.5);
-    } else if (preset === 'farmhouse') {
-      targetPos = new THREE.Vector3(-0.8, 3.6, 2.2);
-      targetLookAt = new THREE.Vector3(-4.2, 1.8, -3.8);
-    } else {
-      // 'overview' or 'reset'
-      targetPos = new THREE.Vector3(16.5, 12.0, 18.0);
-      targetLookAt = new THREE.Vector3(-0.5, 1.2, 0.0);
-    }
+      if (preset === 'top') {
+        targetPos = new THREE.Vector3(0.01, 36.0, 0.05);
+        targetLookAt = new THREE.Vector3(-0.5, 0.5, 0);
+      } else if (preset === 'crops') {
+        if (selectedRowId) {
+          const pos = getCropWorldPosition(selectedRowId, farmConfig);
+          targetPos = new THREE.Vector3(pos.x + 4.2, 3.2, pos.z + 4.5);
+          targetLookAt = new THREE.Vector3(pos.x, 0.65, pos.z);
+        } else {
+          targetPos = new THREE.Vector3(11.5, 7.5, 14.2);
+          targetLookAt = new THREE.Vector3(3.2, 0.8, 6.2);
+        }
+      } else if (preset === 'farmhouse') {
+        targetPos = new THREE.Vector3(-1.5, 3.8, 0.5);
+        targetLookAt = new THREE.Vector3(-5.0, 1.8, -5.5);
+      } else {
+        // 'overview' or 'reset'
+        targetPos = new THREE.Vector3(17.0, 12.5, 18.5);
+        targetLookAt = new THREE.Vector3(-0.5, 1.0, 0.0);
+      }
 
-    targetViewRef.current = { pos: targetPos, target: targetLookAt };
-  }, []);
+      triggerTransition(targetPos, targetLookAt, 800);
+    },
+    [selectedRowId, farmConfig, triggerTransition]
+  );
 
   // React to cameraPreset changes
   useEffect(() => {
@@ -88,29 +165,9 @@ export function FarmCanvas({
     }
   }, [cameraPreset, applyPreset]);
 
-  // Smoothly focus camera when a furrow row is selected
-  useEffect(() => {
-    if (!selectedRowId) return;
-    const rowZMap = {
-      'row-1': 0.5,
-      'row-2': 3.8,
-      'row-3': 7.1,
-      'row-4': 10.4,
-    };
-    const targetZ = rowZMap[selectedRowId] ?? 5.5;
-    targetViewRef.current = {
-      pos: new THREE.Vector3(6.5, 3.8, targetZ + 3.8),
-      target: new THREE.Vector3(1.2, 0.8, targetZ),
-    };
-    const frameId = requestAnimationFrame(() => {
-      onPresetChange?.('crops');
-    });
-    return () => cancelAnimationFrame(frameId);
-  }, [selectedRowId, onPresetChange]);
-
   // Cancel programmatic camera transition if user manually orbits
   const handleUserOrbitStart = useCallback(() => {
-    targetViewRef.current = null;
+    animRef.current = null;
     onPresetChange?.('custom');
   }, [onPresetChange]);
 
@@ -132,7 +189,7 @@ export function FarmCanvas({
             {/* Elevated Cinematic Perspective Camera framing the farm properly */}
             <PerspectiveCamera
               makeDefault
-              position={[16.5, 12.0, 18.0]}
+              position={[17.0, 12.5, 18.5]}
               fov={36}
               near={0.5}
               far={350}
@@ -147,13 +204,13 @@ export function FarmCanvas({
               maxDistance={70}
               maxPolarAngle={Math.PI / 2.05} // Prevent sub-ground camera clipping
               minPolarAngle={Math.PI / 16}
-              target={[-0.5, 1.2, 0.0]}
+              target={[-0.5, 1.0, 0.0]}
               onStart={handleUserOrbitStart}
             />
 
             {/* Smooth Cinematic Camera Transitions */}
             <SmoothCameraController
-              targetViewRef={targetViewRef}
+              animRef={animRef}
               controlsRef={controlsRef}
             />
 
