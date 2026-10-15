@@ -591,19 +591,40 @@ export function compareIrrigation(environmentState, initialSoilMoisture, options
     typeof environmentState === 'object' &&
     environmentState !== null &&
     !Array.isArray(environmentState) &&
-    initialSoilMoisture === undefined &&
-    environmentState.environmentState !== undefined
+    initialSoilMoisture === undefined
   ) {
-    env = environmentState.environmentState;
-    startMoisture = environmentState.initialSoilMoisture;
-    opts = { ...environmentState };
-    delete opts.environmentState;
-    delete opts.initialSoilMoisture;
+    if (environmentState.environmentState !== undefined) {
+      env = environmentState.environmentState;
+      startMoisture = environmentState.initialSoilMoisture;
+      opts = { ...environmentState };
+      delete opts.environmentState;
+      delete opts.initialSoilMoisture;
+    } else {
+      if (typeof environmentState.initialSoilMoisture === 'number') {
+        startMoisture = environmentState.initialSoilMoisture;
+      } else if (typeof environmentState.soilMoisture === 'number') {
+        startMoisture = environmentState.soilMoisture;
+      } else if (typeof environmentState.currentSoilMoisture === 'number') {
+        startMoisture = environmentState.currentSoilMoisture;
+      }
+      opts = { ...environmentState };
+    }
   }
 
-  // Fallback: If initialSoilMoisture is not passed as 2nd arg, check env.soilMoisture
-  if (startMoisture === undefined && env && typeof env.soilMoisture === 'number') {
-    startMoisture = env.soilMoisture;
+  // Fallback: If initialSoilMoisture is not passed as 2nd arg, check env properties
+  if (startMoisture === undefined && env && typeof env === 'object') {
+    if (typeof env.soilMoisture === 'number') {
+      startMoisture = env.soilMoisture;
+    } else if (typeof env.initialSoilMoisture === 'number') {
+      startMoisture = env.initialSoilMoisture;
+    } else if (typeof env.currentSoilMoisture === 'number') {
+      startMoisture = env.currentSoilMoisture;
+    }
+  }
+
+  // Support env.hourlyForecast as alias for env.forecast
+  if (env && typeof env === 'object' && !env.forecast && Array.isArray(env.hourlyForecast)) {
+    env = { ...env, forecast: env.hourlyForecast };
   }
 
   // 1. Validate starting moisture (Requirement: identical initial moisture for both)

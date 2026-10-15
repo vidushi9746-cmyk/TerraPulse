@@ -412,4 +412,31 @@ describe('Irrigation Engine Test Suite', () => {
       /Invalid windowHours: must be a positive integer representing whole hours/
     );
   });
+
+  it('Regression 5: Flat options object and currentSoilMoisture alias handling', () => {
+    const forecast = [
+      { timestamp: '2026-10-14T13:00:00.000Z', precipitation: 5.0 },
+      { timestamp: '2026-10-14T14:00:00.000Z', precipitation: 5.0 },
+      { timestamp: '2026-10-14T15:00:00.000Z', precipitation: 5.0 },
+      { timestamp: '2026-10-14T16:00:00.000Z', precipitation: 5.0 },
+      { timestamp: '2026-10-14T17:00:00.000Z', precipitation: 0.0 },
+      { timestamp: '2026-10-14T18:00:00.000Z', precipitation: 0.0 },
+    ];
+
+    // Flat options object with currentSoilMoisture and hourlyForecast alias
+    const flatResult = compareIrrigation({
+      ...baseEnvironmentState,
+      currentSoilMoisture: 26.0,
+      hourlyForecast: forecast,
+      forecastWindowHours: 6,
+    });
+    assert.strictEqual(flatResult.scenario.initialSoilMoisture, 26.0);
+    assert.strictEqual(flatResult.forecastAware.decision, 'DEFER');
+
+    // Missing initialSoilMoisture must still throw validation error
+    assert.throws(
+      () => compareIrrigation({ ...baseEnvironmentState }),
+      /Invalid initialSoilMoisture: must be a finite number between 0 and 100/
+    );
+  });
 });

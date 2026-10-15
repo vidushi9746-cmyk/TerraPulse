@@ -3,6 +3,7 @@ import { Droplets, Sprout, Zap } from 'lucide-react';
 export function FarmStatus({ simulation = {} }) {
   const moisturePercent = simulation?.soilMoisturePercent ?? 34;
   const healthPercent = simulation?.cropHealthScore ?? 95;
+  const estimatedNdvi = Math.max(0.15, Math.min(0.88, 0.2 + (healthPercent / 100) * 0.65)).toFixed(2);
 
   // Visual status pill for irrigation action
   const actionBadges = {
@@ -126,8 +127,8 @@ export function FarmStatus({ simulation = {} }) {
           </div>
 
           <div className="gauge-secondary-row meter-scale-markers">
-            <span className="secondary-label">Canopy Vigor</span>
-            <span className="secondary-metric marker-opt">NDVI 0.84</span>
+            <span className="secondary-label">Est. Canopy Vigor</span>
+            <span className="secondary-metric marker-opt">NDVI ~{estimatedNdvi} (Model)</span>
           </div>
         </div>
       </div>
