@@ -271,6 +271,16 @@ export function App() {
           weatherState: 'Clear sky',
         };
       }
+      if (selectedScenario === 'cloudy') {
+        return {
+          tempC: 19.4 + Math.sin(hourOffset * 0.26) * 1.5,
+          humidity: 64,
+          windSpeed: 12.0,
+          precipitation: 0.0,
+          weatherCode: 3,
+          weatherState: 'Overcast',
+        };
+      }
       if (selectedScenario === 'rainy') {
         const rainProfile = [1.5, 2.0, 2.0, 1.5, 1.0, 0.0];
         const precip = hourOffset < rainProfile.length ? rainProfile[hourOffset] : 0.0;
@@ -444,7 +454,7 @@ export function App() {
     const weatherState = stepWeather.weatherState;
 
     const isRain = precipitation > 0 || (weatherCode >= 50 && weatherCode <= 67);
-    const isCloudy = !isRain && (weatherCode === 2 || weatherCode === 3 || weatherCode === 45);
+    const isCloudy = !isRain && (weatherCode === 2 || weatherCode === 3 || weatherCode === 45 || selectedScenario === 'cloudy');
 
     const baseScene =
       (isRain
@@ -453,7 +463,7 @@ export function App() {
         ? MOCK_WEATHER_DATA.cloudy?.scene
         : MOCK_WEATHER_DATA.sunny?.scene) || MOCK_WEATHER_DATA.sunny.scene;
 
-    const solarIrradiance = isRain ? 120 : isCloudy ? 340 : 780;
+    const solarIrradiance = isRain ? 220 : isCloudy ? 340 : 780;
     const dewPointC = Number((tempC - (100 - humidity) / 5).toFixed(1));
 
     // Dynamic agronomic indicators derived from simulated soil moisture
@@ -716,8 +726,8 @@ export function App() {
                 </span>
               </div>
               <div className="metric-pill-badge">
-                <span className="badge-dot-live"></span>
-                <span>{weatherData?.condition || 'Live Sync'}</span>
+                <span className={selectedScenario === 'live' ? 'badge-dot-live' : 'badge-dot-whatif'}></span>
+                <span>{selectedScenario === 'live' ? (weatherData?.condition || 'Live Sync') : `What-If: ${weatherData?.condition || selectedScenario}`}</span>
               </div>
             </div>
 
@@ -790,7 +800,11 @@ export function App() {
                     <MapPin size={13} className="text-muted-sage" />
                     <span className="weather-loc-label">{selectedLocation.name}</span>
                   </button>
-                  <span className="weather-live-chip">Live Sync</span>
+                  {selectedScenario === 'live' ? (
+                    <span className="weather-live-chip">Live Sync</span>
+                  ) : (
+                    <span className="weather-whatif-chip">What-If: {selectedScenario.toUpperCase()}</span>
+                  )}
                 </div>
 
                 <div className="weather-card-main-row">
@@ -939,25 +953,29 @@ export function App() {
               {/* NORMAL VIEWPORT TOOLBAR (Shown when NOT fullscreen) */}
               {!isFullscreen && (
                 <div className="farm-workspace-toolbar">
-                  <div className="farm-toolbar-left">
-                    <div className="farm-parcel-title-cluster">
-                      <span className="farm-parcel-label">PARCEL WORKSPACE</span>
-                      <h2 className="farm-parcel-title">{farmConfig.name || 'TerraPulse Digital Twin Farm'}</h2>
-                    </div>
-                    <span className="farm-parcel-sub">
-                      {farmConfig.areaHectares} ha • {farmConfig.soilType ? farmConfig.soilType.split(' ')[0] : 'Loam'} Soil • {farmConfig.plots.length}/4 Furrows Planted
-                    </span>
-                    {selectedRowId && (
-                      <div className="toolbar-furrow-chip">
-                        <span className="toolbar-furrow-dot"></span>
-                        <span className="toolbar-furrow-text">
-                          {selectedPlotInfo ? `${selectedPlotInfo.plot.name} (${selectedPlotInfo.crop?.shortName || selectedPlotInfo.crop?.name})` : `Furrow 0${selectedRowId.replace('row-', '')} (Fallow)`}
-                        </span>
+                  {/* Top Row: Dedicated Parcel Workspace Context & Title */}
+                  <div className="farm-workspace-header-row">
+                    <div className="farm-toolbar-left">
+                      <div className="farm-parcel-title-cluster">
+                        <span className="farm-parcel-label">PARCEL WORKSPACE</span>
+                        <h2 className="farm-parcel-title">{farmConfig.name || 'TerraPulse Digital Twin Farm'}</h2>
                       </div>
-                    )}
+                      <span className="farm-parcel-sub">
+                        {farmConfig.areaHectares} ha • {farmConfig.soilType ? farmConfig.soilType.split(' ')[0] : 'Loam'} Soil • {farmConfig.plots.length}/4 Furrows Planted
+                      </span>
+                      {selectedRowId && (
+                        <div className="toolbar-furrow-chip">
+                          <span className="toolbar-furrow-dot"></span>
+                          <span className="toolbar-furrow-text">
+                            {selectedPlotInfo ? `${selectedPlotInfo.plot.name} (${selectedPlotInfo.crop?.shortName || selectedPlotInfo.crop?.name})` : `Furrow 0${selectedRowId.replace('row-', '')} (Fallow)`}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="farm-toolbar-actions">
+                  {/* Bottom Row: Dedicated Camera & Farm Action Controls */}
+                  <div className="farm-workspace-controls-row">
                     {/* Camera Presets Segmented Capsule */}
                     <div className="hud-camera-presets" role="toolbar" aria-label="Camera Presets">
                       <button
@@ -1007,42 +1025,44 @@ export function App() {
                       </button>
                     </div>
 
-                    <button
-                      type="button"
-                      className="btn-toolbar-add-crop"
-                      onClick={() => setIsAddCropOpen(true)}
-                      title="Add a crop or assign to furrow"
-                    >
-                      <Plus size={14} />
-                      <span>+ Add Crop</span>
-                    </button>
+                    <div className="farm-toolbar-actions">
+                      <button
+                        type="button"
+                        className="btn-toolbar-add-crop"
+                        onClick={() => setIsAddCropOpen(true)}
+                        title="Add a crop or assign to furrow"
+                      >
+                        <Plus size={14} />
+                        <span>+ Add Crop</span>
+                      </button>
 
-                    <button
-                      type="button"
-                      className={`btn-toolbar-drip ${manualIrrigationTriggered ? 'irrigating' : ''}`}
-                      onClick={handleManualIrrigation}
-                      disabled={manualIrrigationTriggered || weatherData.id === 'rainy'}
-                      title={
-                        weatherData.id === 'rainy'
-                          ? 'Automated Lock: Rain override suppresses irrigation'
-                          : 'Pulse test micro-drip solenoid valves across all cultivated zones'
-                      }
-                    >
-                      <Droplet size={14} />
-                      <span>{manualIrrigationTriggered ? 'Valves Pulsing...' : 'Test Drip Pulse'}</span>
-                    </button>
+                      <button
+                        type="button"
+                        className={`btn-toolbar-drip ${manualIrrigationTriggered ? 'irrigating' : ''}`}
+                        onClick={handleManualIrrigation}
+                        disabled={manualIrrigationTriggered || weatherData.id === 'rainy'}
+                        title={
+                          weatherData.id === 'rainy'
+                            ? 'Automated Lock: Rain override suppresses irrigation'
+                            : 'Pulse test micro-drip solenoid valves across all cultivated zones'
+                        }
+                      >
+                        <Droplet size={14} />
+                        <span>{manualIrrigationTriggered ? 'Valves Pulsing...' : 'Test Drip Pulse'}</span>
+                      </button>
 
-                    {/* FULLSCREEN EXPAND BUTTON */}
-                    <button
-                      type="button"
-                      className="btn-toolbar-fullscreen"
-                      onClick={handleToggleFullscreen}
-                      title="Expand 3D Farm to Fullscreen (F)"
-                      aria-label="Expand 3D Farm to Fullscreen"
-                    >
-                      <Maximize2 size={14} />
-                      <span>Fullscreen</span>
-                    </button>
+                      {/* FULLSCREEN EXPAND BUTTON */}
+                      <button
+                        type="button"
+                        className="btn-toolbar-fullscreen"
+                        onClick={handleToggleFullscreen}
+                        title="Expand 3D Farm to Fullscreen (F)"
+                        aria-label="Expand 3D Farm to Fullscreen"
+                      >
+                        <Maximize2 size={14} />
+                        <span>Fullscreen</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1347,8 +1367,8 @@ export function App() {
                       {[
                         { id: 'live', label: 'Live' },
                         { id: 'sunny', label: 'Sunny' },
-                        { id: 'rainy', label: 'Rain' },
-                        { id: 'heavy-rain', label: 'Heavy Rain' },
+                        { id: 'cloudy', label: 'Cloudy' },
+                        { id: 'rainy', label: 'Rainy' },
                       ].map((scen) => (
                         <button
                           key={scen.id}
@@ -1361,7 +1381,7 @@ export function App() {
                               setWeatherMode('live');
                               loadLiveWeatherData(selectedLocation.latitude, selectedLocation.longitude);
                             } else {
-                              setWeatherMode(scen.id === 'heavy-rain' ? 'rainy' : scen.id);
+                              setWeatherMode(scen.id);
                             }
                           }}
                         >
