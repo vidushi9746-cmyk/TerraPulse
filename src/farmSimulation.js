@@ -172,3 +172,164 @@ export function estimateSoilMoisture(
     warnings: [],
   };
 }
+
+/**
+ * Returns the soil saturation category.
+ */
+export function getSaturationStatus(soilMoisturePct) {
+  if (
+    typeof soilMoisturePct !== 'number' ||
+    !Number.isFinite(soilMoisturePct) ||
+    soilMoisturePct < 0 ||
+    soilMoisturePct > 100
+  ) {
+    throw new RangeError(
+      'Soil moisture must be a finite number between 0 and 100.'
+    );
+  }
+
+  if (soilMoisturePct < 25) return 'dry';
+  if (soilMoisturePct < 50) return 'moist';
+  if (soilMoisturePct < 75) return 'wet';
+  return 'saturated';
+}
+
+/**
+ * Recommends irrigation based on the soil saturation category.
+ */
+export function getIrrigationRecommendation(soilMoisturePct) {
+  const status = getSaturationStatus(soilMoisturePct);
+
+  if (status === 'dry') return 'irrigate';
+  if (status === 'moist') return 'monitor';
+  return 'hold';
+}
+
+export function getIrrigationDetails(soilMoisturePct) {
+  const status = getSaturationStatus(soilMoisturePct);
+
+  if (status === 'dry') {
+    return {
+      action: 'irrigate',
+      reason: 'Soil moisture is low.',
+    };
+  }
+
+  if (status === 'moist') {
+    return {
+      action: 'monitor',
+      reason: 'Soil moisture is moderate.',
+    };
+  }
+
+  return {
+    action: 'hold',
+    reason: 'Soil is already wet or saturated.',
+  };
+}
+
+/**
+ * Simulates soil moisture changes over a weather interval.
+ *
+ * This is a simplified teaching model, not a calibrated
+ * agricultural prediction.
+ */
+export function simulateSoilMoisture({
+  precipitationMm,
+  temperatureC,
+  relativeHumidityPct,
+  previousSoilMoisturePct,
+  elapsedHours,
+}) {
+  const warnings = [];
+
+  // Validate the starting soil moisture and elapsed time.
+  if (
+    typeof previousSoilMoisturePct !== 'number' ||
+    !Number.isFinite(previousSoilMoisturePct) ||
+    previousSoilMoisturePct < 0 ||
+    previousSoilMoisturePct > 100
+  ) {
+    throw new RangeError(
+      'Previous soil moisture must be a finite number between 0 and 100.'
+    );
+  }
+
+  if (
+    typeof elapsedHours !== 'number' ||
+    !Number.isFinite(elapsedHours) ||
+    elapsedHours < 0
+  ) {
+    throw new RangeError(
+      'Elapsed hours must be a finite, non-negative number.'
+    );
+  }
+
+  // Check the weather inputs. Never invent missing weather data.
+  if (
+    typeof precipitationMm !== 'number' ||
+    !Number.isFinite(precipitationMm) ||
+    precipitationMm < 0
+  ) {
+    warnings.push('Precipitation is missing or invalid.');
+  }
+
+  if (
+    typeof temperatureC !== 'number' ||
+    !Number.isFinite(temperatureC)
+  ) {
+    warnings.push('Temperature is missing or invalid.');
+  }
+
+  if (
+    typeof relativeHumidityPct !== 'number' ||
+    !Number.isFinite(relativeHumidityPct) ||
+    relativeHumidityPct < 0 ||
+    relativeHumidityPct > 100
+  ) {
+    warnings.push('Relative humidity is missing or invalid.');
+  }
+
+  // Preserve the previous moisture if any weather input is invalid.
+  if (warnings.length > 0) {
+    return {
+      soilMoisturePct: previousSoilMoisturePct,
+      rainfallImpactPct: 0,
+      dryingLossPct: 0,
+      saturationStatus: getSaturationStatus(previousSoilMoisturePct),
+      irrigation: getIrrigationDetails(previousSoilMoisturePct),
+      dataMode: 'simulated',
+      weatherDataAvailable: false,
+      warnings,
+    };
+  }
+
+  // Illustrative coefficients; these are not scientifically calibrated.
+  const rainfallImpactPct = precipitationMm * 0.8;
+  const temperatureFactor = Math.min(
+    2,
+    Math.max(0, (temperatureC + 5) / 30)
+  );
+  const drynessFactor = 1 - relativeHumidityPct / 100;
+  const dryingLossPct =
+    temperatureFactor * drynessFactor * elapsedHours * 0.15;
+
+  const rawMoisture =
+    previousSoilMoisturePct + rainfallImpactPct - dryingLossPct;
+
+  const soilMoisturePct =
+    Math.round(
+      (Math.min(100, Math.max(0, rawMoisture)) + 1e-10) * 100
+    ) / 100;
+
+  return {
+    soilMoisturePct,
+    rainfallImpactPct,
+    dryingLossPct,
+    saturationStatus: getSaturationStatus(soilMoisturePct),
+    irrigation: getIrrigationDetails(soilMoisturePct),
+    dataMode: 'simulated',
+    weatherDataAvailable: true,
+    warnings: [],
+  };
+}

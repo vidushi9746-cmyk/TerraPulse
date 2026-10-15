@@ -44,6 +44,8 @@ export function ComparisonPanel({
   const rainMm = hasEngineResult
     ? typeof scenario?.totalRainMm === 'number'
       ? scenario.totalRainMm
+      : typeof forecastAware?.totalRainMm === 'number'
+      ? forecastAware.totalRainMm
       : null
     : typeof expectedRainMm === 'number'
     ? expectedRainMm

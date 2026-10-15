@@ -4,6 +4,8 @@ import {
   convertAreaToSqm,
   convertDepthToLitres,
   deriveCropIrrigationThresholds,
+  calculatePlotThresholds,
+  estimateCropCanopyHealth,
   validateFarmConfig,
   DEFAULT_FARM_CONFIG,
   SUPPORTED_CROPS,
@@ -138,5 +140,184 @@ describe('Farm Configuration & Crop Management Test Suite', () => {
     const areaSqm = convertAreaToSqm('1000', 'sqm');
     const waterLitres = convertDepthToLitres(10, areaSqm);
     assert.strictEqual(waterLitres, 10000);
+  });
+
+  it('CFG-9: Individual Plot Resolves Correct Crop-Specific Configuration & Distinct Thresholds', () => {
+    const plots = DEFAULT_FARM_CONFIG.plots;
+    assert.strictEqual(plots.length, 4);
+
+    // Plot 1: Golden Winter Wheat (vegetative: 35 dry, 60 target)
+    const p1 = calculatePlotThresholds(plots[0]);
+    assert.strictEqual(p1.isSupported, true);
+    assert.strictEqual(p1.crop.id, 'wheat');
+    assert.strictEqual(p1.dryThreshold, 35);
+    assert.strictEqual(p1.targetMoisture, 60);
+
+    // Plot 2: Sweet Maize / Corn (flowering: 38 + 4 = 42 dry, 65 + 4 = 69 target)
+    const p2 = calculatePlotThresholds(plots[1]);
+    assert.strictEqual(p2.isSupported, true);
+    assert.strictEqual(p2.crop.id, 'corn');
+    assert.strictEqual(p2.dryThreshold, 42);
+    assert.strictEqual(p2.targetMoisture, 69);
+
+    // Plot 3: Hydro-Tolerant Greens / Lettuce (vegetative: 40 dry, 65 target)
+    const p3 = calculatePlotThresholds(plots[2]);
+    assert.strictEqual(p3.isSupported, true);
+    assert.strictEqual(p3.crop.id, 'lettuce');
+    assert.strictEqual(p3.dryThreshold, 40);
+    assert.strictEqual(p3.targetMoisture, 65);
+
+    // Plot 4: Deep-Root Carrots (maturation: 32 - 3 = 29 dry, 55 - 3 = 52 target)
+    const p4 = calculatePlotThresholds(plots[3]);
+    assert.strictEqual(p4.isSupported, true);
+    assert.strictEqual(p4.crop.id, 'carrots');
+    assert.strictEqual(p4.dryThreshold, 29);
+    assert.strictEqual(p4.targetMoisture, 52);
+
+    // Verify all four plots have distinct target moistures in default configuration
+    const targets = [p1.targetMoisture, p2.targetMoisture, p3.targetMoisture, p4.targetMoisture];
+    assert.deepStrictEqual(targets, [60, 69, 65, 52]);
+  });
+
+  it('CFG-10: Target Moisture Obtains from Correct Configuration & Growth Stage Adjustments', () => {
+    // Corn across all 4 stages: base target = 65, base dry = 38
+    const seedlingCorn = calculatePlotThresholds({ cropType: 'corn', growthStage: 'seedling' });
+    assert.strictEqual(seedlingCorn.targetMoisture, 63); // 65 - 2
+    assert.strictEqual(seedlingCorn.dryThreshold, 36); // 38 - 2
+
+    const vegCorn = calculatePlotThresholds({ cropType: 'corn', growthStage: 'vegetative' });
+    assert.strictEqual(vegCorn.targetMoisture, 65); // 65 + 0
+    assert.strictEqual(vegCorn.dryThreshold, 38); // 38 + 0
+
+    const flowerCorn = calculatePlotThresholds({ cropType: 'corn', growthStage: 'flowering' });
+    assert.strictEqual(flowerCorn.targetMoisture, 69); // 65 + 4
+    assert.strictEqual(flowerCorn.dryThreshold, 42); // 38 + 4
+
+    const matCorn = calculatePlotThresholds({ cropType: 'corn', growthStage: 'maturation' });
+    assert.strictEqual(matCorn.targetMoisture, 62); // 65 - 3
+    assert.strictEqual(matCorn.dryThreshold, 35); // 38 - 3
+  });
+
+  it('CFG-11: Changing Plot Crop Type Dynamically Updates Target Moisture Lookup', () => {
+    const plot = {
+      id: 'dynamic-plot',
+      rowId: 'row-2',
+      cropType: 'corn',
+      growthStage: 'flowering',
+    };
+    const before = calculatePlotThresholds(plot);
+    assert.strictEqual(before.targetMoisture, 69);
+
+    // Change crop type to carrots (maturation)
+    plot.cropType = 'carrots';
+    plot.growthStage = 'maturation';
+    const afterCarrots = calculatePlotThresholds(plot);
+    assert.strictEqual(afterCarrots.targetMoisture, 52);
+    assert.strictEqual(afterCarrots.crop.name, 'Deep-Root Carrots');
+
+    // Change crop type to wheat (vegetative)
+    plot.cropType = 'wheat';
+    plot.growthStage = 'vegetative';
+    const afterWheat = calculatePlotThresholds(plot);
+    assert.strictEqual(afterWheat.targetMoisture, 60);
+  });
+
+  it('CFG-12: Canopy Health Values Are Crop-Specific and Derive from Intended Inputs', () => {
+    const moisture = 34.0; // Baseline simulation soil moisture
+
+    // Plot 4: Carrots (dry=29, target=52). At 34% moisture, it is comfortably in optimal zone (>= 29)
+    const carrotsHealth = estimateCropCanopyHealth(
+      { cropType: 'carrots', growthStage: 'maturation' },
+      moisture
+    );
+    assert.strictEqual(carrotsHealth.isSupported, true);
+    assert.strictEqual(carrotsHealth.isEstimate, true);
+    assert.ok(carrotsHealth.score >= 90, `Expected carrots score >= 90, got ${carrotsHealth.score}`);
+    assert.strictEqual(carrotsHealth.status, 'Optimal Canopy Health');
+
+    // Plot 1: Wheat (dry=35, target=60). At 34% moisture, it is slightly below dry threshold
+    const wheatHealth = estimateCropCanopyHealth(
+      { cropType: 'wheat', growthStage: 'vegetative' },
+      moisture
+    );
+    assert.strictEqual(wheatHealth.isSupported, true);
+    assert.strictEqual(wheatHealth.score, 91);
+    assert.strictEqual(wheatHealth.status, 'Optimal Canopy Health');
+
+    // Plot 3: Lettuce (dry=40, target=65). At 34% moisture, it is 6% below dry threshold
+    const lettuceHealth = estimateCropCanopyHealth(
+      { cropType: 'lettuce', growthStage: 'vegetative' },
+      moisture
+    );
+    assert.strictEqual(lettuceHealth.isSupported, true);
+    assert.strictEqual(lettuceHealth.score, 83);
+    assert.strictEqual(lettuceHealth.status, 'Stable Growth');
+
+    // Plot 2: Corn (dry=42, target=69, flowering sensitivity 1.3). At 34% moisture, it is 8% below dry threshold
+    const cornHealth = estimateCropCanopyHealth(
+      { cropType: 'corn', growthStage: 'flowering' },
+      moisture
+    );
+    assert.strictEqual(cornHealth.isSupported, true);
+    assert.strictEqual(cornHealth.score, 77);
+    assert.strictEqual(cornHealth.status, 'Stable Growth');
+
+    // Verify all four crops produce different scores based on their specific agronomic parameters
+    assert.notStrictEqual(carrotsHealth.score, cornHealth.score);
+    assert.notStrictEqual(wheatHealth.score, cornHealth.score);
+  });
+
+  it('CFG-13: Identical Inputs Produce Deterministic Results (No Random Jitter)', () => {
+    const plotA = { cropType: 'wheat', growthStage: 'vegetative' };
+    const plotB = { cropType: 'wheat', growthStage: 'vegetative' };
+    const moisture = 36.5;
+
+    const resA1 = estimateCropCanopyHealth(plotA, moisture);
+    const resA2 = estimateCropCanopyHealth(plotA, moisture);
+    const resB = estimateCropCanopyHealth(plotB, moisture);
+
+    // Repeated evaluations are identical
+    assert.strictEqual(resA1.score, resA2.score);
+    assert.strictEqual(resA1.status, resA2.status);
+    assert.strictEqual(resA1.color, resA2.color);
+
+    // Two distinct plot instances with identical configurations yield identical outputs
+    assert.strictEqual(resA1.score, resB.score);
+    assert.strictEqual(resA1.status, resB.status);
+  });
+
+  it('CFG-14: Missing or Unsupported Crop Configuration Handled Safely', () => {
+    // 1. Null / undefined / invalid plot
+    const nullPlot = calculatePlotThresholds(null);
+    assert.strictEqual(nullPlot.isSupported, false);
+    assert.strictEqual(nullPlot.targetMoisture, null);
+    assert.strictEqual(nullPlot.dryThreshold, null);
+
+    const nullHealth = estimateCropCanopyHealth(null, 35);
+    assert.strictEqual(nullHealth.isSupported, false);
+    assert.strictEqual(nullHealth.score, null);
+    assert.strictEqual(nullHealth.status, 'N/A (Fallow Soil)');
+
+    // 2. Unsupported crop type does not throw and is explicitly flagged
+    const badCropPlot = { cropType: 'dragonfruit_unsupported', growthStage: 'vegetative' };
+    const badThresholds = calculatePlotThresholds(badCropPlot);
+    assert.strictEqual(badThresholds.isSupported, false);
+    assert.strictEqual(badThresholds.targetMoisture, null);
+    assert.ok(badThresholds.error.includes('Unsupported crop type'));
+
+    const badHealth = estimateCropCanopyHealth(badCropPlot, 35);
+    assert.strictEqual(badHealth.isSupported, false);
+    assert.strictEqual(badHealth.score, null);
+    assert.strictEqual(badHealth.status, 'N/A (Unsupported Crop)');
+
+    // 3. deriveCropIrrigationThresholds does not silently convert unsupported crops to wheat
+    const mixedPlots = [
+      { cropType: 'wheat', growthStage: 'vegetative' }, // 35 dry, 60 target
+      { cropType: 'unknown_crop', growthStage: 'vegetative' }, // unsupported
+    ];
+    const derived = deriveCropIrrigationThresholds(mixedPlots);
+    // Only the valid wheat plot is considered
+    assert.strictEqual(derived.dryThreshold, 35);
+    assert.strictEqual(derived.targetMoisture, 60);
   });
 });
