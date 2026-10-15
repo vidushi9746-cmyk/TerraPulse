@@ -53,15 +53,15 @@ function createMasterMountainPlateauGeometry() {
       // Gentle natural undulation across the farm surface
       y = 0.52 - 0.00025 * (x * x + z * z);
 
-      // Farmhouse gentle knoll at x in [-7, -1], z in [-7, -1]
-      if (x >= -7.5 && x <= -1.0 && z >= -7.0 && z <= -1.0) {
-        const knollFactor = Math.cos((x + 4.2) * 0.45) * Math.cos((z + 4.0) * 0.45);
-        y += Math.max(0, knollFactor * 0.38);
+      // Farmhouse gentle knoll at x in [-8.5, -1.5], z in [-8.5, -2.5]
+      if (x >= -8.5 && x <= -1.5 && z >= -8.5 && z <= -2.5) {
+        const knollFactor = Math.cos((x + 5.0) * 0.42) * Math.cos((z + 5.5) * 0.42);
+        y += Math.max(0, knollFactor * 0.36);
       }
 
-      // Barn knoll at x in [4.5, 11], z in [-7.5, -2]
-      if (x >= 4.5 && x <= 11.0 && z >= -7.5 && z <= -2.0) {
-        const barnKnoll = Math.cos((x - 7.5) * 0.45) * Math.cos((z + 4.5) * 0.45);
+      // Barn knoll at x in [5.0, 12.0], z in [-8.5, -2.5]
+      if (x >= 5.0 && x <= 12.0 && z >= -8.5 && z <= -2.5) {
+        const barnKnoll = Math.cos((x - 8.5) * 0.42) * Math.cos((z + 5.5) * 0.42);
         y += Math.max(0, barnKnoll * 0.32);
       }
 
@@ -82,30 +82,45 @@ function createMasterMountainPlateauGeometry() {
       // ----------------------------------------------------------------------
       // Surface Shading (Winding Roads, Plots, Yard, Grass, Pond)
       // ----------------------------------------------------------------------
-      // Winding Road Network:
+      // Winding Road & Agricultural Grid Pathway Network:
       // - Main road enters from lower-right (x ≈ 16, z ≈ 14), winds past pond (x ≈ 12, z ≈ 6)
-      // - Branches left toward central farm (x ≈ 1.5, z ≈ 0)
-      // - Connects to farmhouse driveway (x ≈ 0, z ≈ -3) and barn lane (x ≈ 7, z ≈ -4)
+      // - Broad central crossroad connects west pasture, farmhouse yard, tractor bay, crops, and barn lane
       const onEntranceRoad = Math.abs((x - 1.2 * z) + 0.8) < 1.7 && z >= 8.0 && z <= 15.0;
-      const onPondRoad = Math.abs(x - 10.5) < 1.8 && z >= 1.0 && z <= 10.0;
-      const onCentralCrossRoad = Math.abs(z + 0.2) < 1.5 && x >= -3.5 && x <= 10.0;
-      const onHouseDriveway = Math.abs(x - 0.5) < 1.6 && z >= -5.0 && z <= 1.0;
-      const onBarnLane = Math.abs(z + 3.8) < 1.4 && x >= 3.0 && x <= 11.0;
+      const onPondRoad = Math.abs(x - 11.2) < 1.4 && z >= 0.5 && z <= 11.0;
+      const onCentralCrossRoad = Math.abs(z - 0.4) < 1.3 && x >= -11.0 && x <= 11.5;
+      const onHouseDriveway = Math.abs(x - 1.2) < 1.5 && z >= -6.0 && z <= 1.2;
+      const onBarnLane = Math.abs(z + 4.8) < 1.4 && x >= 2.0 && x <= 11.0;
+      // Perpendicular pathways connecting organized crop plots:
+      const onCenterPath = Math.abs(x - 3.2) < 0.9 && z >= 0.0 && z <= 11.5;
+      const onWestPath = Math.abs(x - (-4.9)) < 0.9 && z >= 0.0 && z <= 11.5;
+      const onPlotCrossPath = Math.abs(z - 6.1) < 0.9 && x >= -12.5 && x <= 10.5;
 
       if (pondDist < 0.85) {
         // Turquoise pond bed
         r = 0.12; g = 0.32; b = 0.36;
-      } else if (onEntranceRoad || onPondRoad || onCentralCrossRoad || onHouseDriveway || onBarnLane) {
+      } else if (
+        onEntranceRoad ||
+        onPondRoad ||
+        onCentralCrossRoad ||
+        onHouseDriveway ||
+        onBarnLane ||
+        onCenterPath ||
+        onWestPath ||
+        onPlotCrossPath
+      ) {
         // Warm sandy-brown dirt road with gravel nuances
         y -= 0.03;
         r = 0.52; g = 0.44; b = 0.32;
-      } else if (x >= -11.5 && x <= -4.2 && z >= 3.0 && z <= 10.0) {
+      } else if (x >= -12.8 && x <= -5.6 && z >= 3.2 && z <= 8.8) {
         // Sunflower plot cultivated soil base
-        r = 0.25; g = 0.17; b = 0.10;
-      } else if (x >= -4.0 && x <= 6.2 && z >= 0.0 && z <= 12.0) {
-        // Cultivated vegetable plots zone
+        r = 0.24; g = 0.16; b = 0.09;
+      } else if (x >= -3.7 && x <= 2.5 && z >= 1.5 && z <= 10.8) {
+        // Center cultivated vegetable plots zone
         r = 0.21; g = 0.14; b = 0.08;
-      } else if (x >= -7.0 && x <= 1.5 && z >= -6.5 && z <= -1.0) {
+      } else if (x >= 3.9 && x <= 10.1 && z >= 1.5 && z <= 10.8) {
+        // East cultivated vegetable plots zone
+        r = 0.21; g = 0.14; b = 0.08;
+      } else if (x >= -8.5 && x <= 1.8 && z >= -8.0 && z <= -1.2) {
         // Farmhouse yard and gravel walk
         r = 0.42; g = 0.38; b = 0.30;
       } else {
@@ -645,9 +660,9 @@ function ModernAgriculturalTractor({ position = [0.8, 0.48, -2.8], rotation = [0
 }
 
 // ----------------------------------------------------------------------------
-// 6. PROMINENT SUNFLOWER FIELD & TOOL SHED (LEFT-MIDDLE FOREGROUND)
+// 6. PROMINENT SUNFLOWER FIELD (WESTERN CULTIVATION ZONE)
 // ----------------------------------------------------------------------------
-function OrganizedSunflowerField({ position = [-7.8, 0.5, 6.5] }) {
+function OrganizedSunflowerField({ position = [-9.2, 0.5, 6.0] }) {
   const sunflowerGroupRef = useRef();
 
   useFrame(({ clock }) => {
@@ -662,11 +677,11 @@ function OrganizedSunflowerField({ position = [-7.8, 0.5, 6.5] }) {
   // Dense, organized grid of sunflowers (4 rows of 8 = 32 sunflowers)
   const sunflowerGrid = useMemo(() => {
     const list = [];
-    const rows = [-2.2, -0.75, 0.75, 2.2];
+    const rows = [-1.8, -0.6, 0.6, 1.8];
     const cols = 8;
     rows.forEach((rz) => {
       for (let c = 0; c < cols; c++) {
-        const rx = -3.0 + (c / (cols - 1)) * 6.0;
+        const rx = -2.6 + (c / (cols - 1)) * 5.2;
         list.push([rx, 0, rz]);
       }
     });
@@ -675,37 +690,36 @@ function OrganizedSunflowerField({ position = [-7.8, 0.5, 6.5] }) {
 
   return (
     <group position={position}>
-      {/* Cultivated Loam Bed (7.2m x 5.8m) */}
+      {/* Cultivated Loam Bed (6.8m x 5.4m) */}
       <mesh position={[0, 0.08, 0]} receiveShadow>
-        <boxGeometry args={[7.2, 0.16, 5.8]} />
+        <boxGeometry args={[6.8, 0.16, 5.4]} />
         <meshStandardMaterial color="#29180c" roughness={0.9} />
       </mesh>
 
       {/* Rustic Wooden Boundary Fence around Sunflowers */}
-      <mesh position={[0, 0.45, -2.9]} castShadow>
-        <boxGeometry args={[7.2, 0.1, 0.08]} />
+      <mesh position={[0, 0.42, -2.7]} castShadow>
+        <boxGeometry args={[6.8, 0.1, 0.08]} />
         <meshStandardMaterial color="#78593d" roughness={0.9} />
       </mesh>
-      <mesh position={[0, 0.45, 2.9]} castShadow>
-        <boxGeometry args={[7.2, 0.1, 0.08]} />
+      <mesh position={[0, 0.42, 2.7]} castShadow>
+        <boxGeometry args={[6.8, 0.1, 0.08]} />
         <meshStandardMaterial color="#78593d" roughness={0.9} />
       </mesh>
-      <mesh position={[-3.6, 0.45, 0]} rotation={[0, Math.PI / 2, 0]} castShadow>
-        <boxGeometry args={[5.8, 0.1, 0.08]} />
+      <mesh position={[-3.4, 0.42, 0]} rotation={[0, Math.PI / 2, 0]} castShadow>
+        <boxGeometry args={[5.4, 0.1, 0.08]} />
         <meshStandardMaterial color="#78593d" roughness={0.9} />
       </mesh>
-
-      {/* Small Rustic Tool Shed / Pump Hut at Right-Front Corner */}
-      <group position={[3.8, 0.0, 2.4]} rotation={[0, -0.3, 0]}>
-        <mesh position={[0, 0.9, 0]} castShadow receiveShadow>
-          <boxGeometry args={[1.6, 1.8, 1.4]} />
-          <meshStandardMaterial color="#6b4423" roughness={0.9} />
+      <mesh position={[3.4, 0.42, 0]} rotation={[0, Math.PI / 2, 0]} castShadow>
+        <boxGeometry args={[5.4, 0.1, 0.08]} />
+        <meshStandardMaterial color="#78593d" roughness={0.9} />
+      </mesh>
+      {/* 4 Corner Fence Posts */}
+      {[[-3.4, -2.7], [3.4, -2.7], [-3.4, 2.7], [3.4, 2.7]].map(([px, pz], idx) => (
+        <mesh key={idx} position={[px, 0.35, pz]} castShadow>
+          <cylinderGeometry args={[0.06, 0.06, 0.6, 6]} />
+          <meshStandardMaterial color="#5c432d" roughness={0.9} />
         </mesh>
-        <mesh position={[0, 2.0, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
-          <coneGeometry args={[1.3, 0.8, 4]} />
-          <meshStandardMaterial color="#c2410c" roughness={0.7} />
-        </mesh>
-      </group>
+      ))}
 
       {/* Dense Rows of Golden Sunflowers */}
       <group ref={sunflowerGroupRef}>
@@ -737,6 +751,31 @@ function OrganizedSunflowerField({ position = [-7.8, 0.5, 6.5] }) {
     </group>
   );
 }
+
+// ----------------------------------------------------------------------------
+// 6b. DEDICATED RUSTIC TOOL SHED & FIELD PUMP HUT (WESTERN PERIMETER BUFFER)
+// ----------------------------------------------------------------------------
+function RusticToolShed({ position = [-14.0, 0.5, 6.0], rotation = [0, 0.25, 0] }) {
+  return (
+    <group position={position} rotation={rotation}>
+      {/* Small Rustic Tool Shed / Pump Hut on Dedicated Border Apron */}
+      <mesh position={[0, 0.9, 0]} castShadow receiveShadow>
+        <boxGeometry args={[1.6, 1.8, 1.4]} />
+        <meshStandardMaterial color="#6b4423" roughness={0.9} />
+      </mesh>
+      <mesh position={[0, 2.0, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
+        <coneGeometry args={[1.3, 0.8, 4]} />
+        <meshStandardMaterial color="#c2410c" roughness={0.7} />
+      </mesh>
+      {/* Wooden tool shelf / crate */}
+      <mesh position={[0, 0.22, 0.95]} castShadow receiveShadow>
+        <boxGeometry args={[0.9, 0.44, 0.5]} />
+        <meshStandardMaterial color="#543720" roughness={0.9} />
+      </mesh>
+    </group>
+  );
+}
+
 
 // ----------------------------------------------------------------------------
 // 7. ANIMAL ENCLOSURE & PASTURE (BEHIND & LEFT OF SUNFLOWER FIELD)
@@ -995,11 +1034,11 @@ function SubtlePerimeterBlossomTree({ position = [0, 0, 0], scale = 0.85 }) {
 function NaturalBotanicalVegetation() {
   // Broadleaf oaks placed strictly along outer perimeter and background knolls
   const oaks = useMemo(() => [
-    { pos: [-6.5, 0.5, -9.5], scale: 1.3 },
-    { pos: [1.5, 0.5, -9.0], scale: 1.25 },
-    { pos: [14.0, 0.5, -3.5], scale: 1.35 },
-    { pos: [-14.5, 0.5, -5.5], scale: 1.4 },
-    { pos: [15.5, 0.5, 12.5], scale: 1.2 },
+    { pos: [-7.5, 0.5, -11.0], scale: 1.3 },
+    { pos: [2.5, 0.5, -11.5], scale: 1.25 },
+    { pos: [15.5, 0.5, -5.0], scale: 1.35 },
+    { pos: [-16.5, 0.5, -6.0], scale: 1.4 },
+    { pos: [15.5, 0.5, 13.0], scale: 1.2 },
   ], []);
 
   // Alpine pines along cliff precipices and outer boundaries
@@ -1011,9 +1050,9 @@ function NaturalBotanicalVegetation() {
     { pos: [16.8, 0.5, 2.0], scale: 1.35 },
   ], []);
 
-  // Only 2 subtle blossom trees, placed strictly at the distant outer perimeter (NO crop overlap)
+  // Subtle blossom trees placed strictly at the distant outer perimeter
   const outerBlossoms = useMemo(() => [
-    { pos: [16.2, 0.45, 6.0], scale: 0.85 },
+    { pos: [16.5, 0.45, 6.0], scale: 0.85 },
     { pos: [17.5, 0.45, 14.5], scale: 0.85 },
   ], []);
 
@@ -1039,6 +1078,8 @@ function InteractiveCropPlot({
   id,
   type = 'wheat',
   growthStage = 'vegetative',
+  position = null,
+  xPos = 0,
   zPos = 0,
   isSelected = false,
   onSelect = null,
@@ -1049,6 +1090,8 @@ function InteractiveCropPlot({
   const [isHovered, setIsHovered] = useState(false);
   const rowGroupRef = useRef();
   const sprayRef = useRef();
+
+  const plotPos = position || [xPos, 0.45, zPos];
 
   // Dynamic soil moisture shading
   const soilColor = useMemo(() => {
@@ -1078,7 +1121,7 @@ function InteractiveCropPlot({
     const time = clock.getElapsedTime();
     if (rowGroupRef.current && type !== 'fallow') {
       const swayAmt = Math.min(0.06, (windSpeed / 12) * 0.035);
-      rowGroupRef.current.rotation.z = Math.sin(time * 2.0 + zPos * 0.7) * swayAmt;
+      rowGroupRef.current.rotation.z = Math.sin(time * 2.0 + plotPos[2] * 0.7) * swayAmt;
     }
 
     if (sprayRef.current && isIrrigating) {
@@ -1091,38 +1134,38 @@ function InteractiveCropPlot({
   const plantGrid = useMemo(() => {
     const list = [];
     if (type === 'wheat') {
-      const rows = [-0.8, 0.0, 0.8];
-      const countX = 14;
+      const rows = [-1.2, -0.4, 0.4, 1.2];
+      const countX = 11;
       rows.forEach((rz) => {
         for (let i = 0; i < countX; i++) {
-          const rx = -4.2 + (i / (countX - 1)) * 8.4;
+          const rx = -2.3 + (i / (countX - 1)) * 4.6;
           list.push([rx, 0, rz]);
         }
       });
     } else if (type === 'corn') {
-      const rows = [-0.6, 0.6];
-      const countX = 10;
+      const rows = [-1.0, 0.0, 1.0];
+      const countX = 8;
       rows.forEach((rz) => {
         for (let i = 0; i < countX; i++) {
-          const rx = -4.0 + (i / (countX - 1)) * 8.0;
+          const rx = -2.2 + (i / (countX - 1)) * 4.4;
           list.push([rx, 0, rz]);
         }
       });
     } else if (type === 'lettuce') {
-      const rows = [-0.8, 0.0, 0.8];
-      const countX = 11;
+      const rows = [-1.2, -0.4, 0.4, 1.2];
+      const countX = 9;
       rows.forEach((rz) => {
         for (let i = 0; i < countX; i++) {
-          const rx = -4.0 + (i / (countX - 1)) * 8.0;
+          const rx = -2.3 + (i / (countX - 1)) * 4.6;
           list.push([rx, 0, rz]);
         }
       });
     } else if (type === 'carrots') {
-      const rows = [-0.8, 0.0, 0.8];
-      const countX = 12;
+      const rows = [-1.2, -0.4, 0.4, 1.2];
+      const countX = 9;
       rows.forEach((rz) => {
         for (let i = 0; i < countX; i++) {
-          const rx = -4.1 + (i / (countX - 1)) * 8.2;
+          const rx = -2.3 + (i / (countX - 1)) * 4.6;
           list.push([rx, 0, rz]);
         }
       });
@@ -1131,8 +1174,8 @@ function InteractiveCropPlot({
   }, [type]);
 
   return (
-    <group position={[1.2, 0.45, zPos]}>
-      {/* Raised Loam Soil Bed Mound (9.8m x 2.8m) */}
+    <group position={plotPos}>
+      {/* Raised Loam Soil Bed Mound (5.8m x 3.6m) */}
       <mesh
         position={[0, 0.1, 0]}
         receiveShadow
@@ -1143,7 +1186,7 @@ function InteractiveCropPlot({
         onPointerOver={() => setIsHovered(true)}
         onPointerOut={() => setIsHovered(false)}
       >
-        <boxGeometry args={[9.8, 0.22, 2.8]} />
+        <boxGeometry args={[5.8, 0.22, 3.6]} />
         <meshStandardMaterial
           color={soilColor}
           roughness={soilMoisturePercent > 60 ? 0.35 : 0.88}
@@ -1151,10 +1194,35 @@ function InteractiveCropPlot({
         />
       </mesh>
 
+      {/* Rustic Wooden Boundary Fence around Crop Plot */}
+      <mesh position={[0, 0.35, -1.8]} castShadow>
+        <boxGeometry args={[5.8, 0.1, 0.08]} />
+        <meshStandardMaterial color="#78593d" roughness={0.9} />
+      </mesh>
+      <mesh position={[0, 0.35, 1.8]} castShadow>
+        <boxGeometry args={[5.8, 0.1, 0.08]} />
+        <meshStandardMaterial color="#78593d" roughness={0.9} />
+      </mesh>
+      <mesh position={[-2.9, 0.35, 0]} rotation={[0, Math.PI / 2, 0]} castShadow>
+        <boxGeometry args={[3.6, 0.1, 0.08]} />
+        <meshStandardMaterial color="#78593d" roughness={0.9} />
+      </mesh>
+      <mesh position={[2.9, 0.35, 0]} rotation={[0, Math.PI / 2, 0]} castShadow>
+        <boxGeometry args={[3.6, 0.1, 0.08]} />
+        <meshStandardMaterial color="#78593d" roughness={0.9} />
+      </mesh>
+      {/* 4 Corner Fence Posts */}
+      {[[-2.9, -1.8], [2.9, -1.8], [-2.9, 1.8], [2.9, 1.8]].map(([px, pz], idx) => (
+        <mesh key={idx} position={[px, 0.3, pz]} castShadow>
+          <cylinderGeometry args={[0.06, 0.06, 0.55, 6]} />
+          <meshStandardMaterial color="#5c432d" roughness={0.9} />
+        </mesh>
+      ))}
+
       {/* Furrow Ridges */}
-      {[-0.8, 0.0, 0.8].map((rz, i) => (
+      {[-1.2, -0.4, 0.4, 1.2].map((rz, i) => (
         <mesh key={i} position={[0, 0.2, rz]} receiveShadow>
-          <boxGeometry args={[9.4, 0.08, 0.45]} />
+          <boxGeometry args={[5.4, 0.08, 0.35]} />
           <meshStandardMaterial color={soilColor} roughness={0.9} />
         </mesh>
       ))}
@@ -1162,8 +1230,15 @@ function InteractiveCropPlot({
       {/* Active Irrigation Spray Mist */}
       {isIrrigating && (
         <group ref={sprayRef}>
-          {[-3.6, -1.8, 0, 1.8, 3.6].map((sx, idx) => (
-            <mesh key={idx} position={[sx, 0.5, 0]}>
+          {[
+            [-1.8, 0.5, -0.6],
+            [0, 0.5, -0.6],
+            [1.8, 0.5, -0.6],
+            [-1.8, 0.5, 0.6],
+            [0, 0.5, 0.6],
+            [1.8, 0.5, 0.6],
+          ].map(([sx, sy, sz], idx) => (
+            <mesh key={idx} position={[sx, sy, sz]}>
               <sphereGeometry args={[0.15, 6, 6]} />
               <meshStandardMaterial color="#38bdf8" transparent opacity={0.75} roughness={0.1} />
             </mesh>
@@ -1174,7 +1249,7 @@ function InteractiveCropPlot({
       {/* Interactive Selection Highlight Ring */}
       {(isSelected || isHovered) && (
         <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[10.2, 3.2]} />
+          <planeGeometry args={[6.1, 3.9]} />
           <meshBasicMaterial
             color={isSelected ? '#b8d6a0' : '#fef08a'}
             transparent
@@ -1285,13 +1360,13 @@ export function FarmScene({
     []
   );
 
-  // 4 well-spaced vegetable furrow rows in lower-middle sector
+  // 4 well-spaced vegetable furrow plots in a balanced 2x2 agricultural grid (Zone B)
   const furrows = useMemo(
     () => [
-      { id: 'row-1', zPos: 0.5 },
-      { id: 'row-2', zPos: 3.8 },
-      { id: 'row-3', zPos: 7.1 },
-      { id: 'row-4', zPos: 10.4 },
+      { id: 'row-1', xPos: 7.0, zPos: 3.5 }, // North-East: Golden Winter Wheat
+      { id: 'row-2', xPos: -0.6, zPos: 3.5 }, // North-Center: Sweet Maize / Corn
+      { id: 'row-3', xPos: -0.6, zPos: 8.8 }, // South-Center: Hydro-Tolerant Greens / Lettuce
+      { id: 'row-4', xPos: 7.0, zPos: 8.8 }, // South-East: Deep-Root Carrots
     ],
     []
   );
@@ -1324,20 +1399,23 @@ export function FarmScene({
       {/* 3. Cliff Crag Boulders & Cascading Front Waterfall */}
       <CliffFormationsAndWaterfall />
 
-      {/* 4. Picturesque Countryside Farmhouse (Slightly Left of Center) */}
-      <PicturesqueFarmhouse position={[-4.2, 0.52, -3.8]} />
+      {/* 4. Picturesque Countryside Farmhouse (Dedicated Farmstead Area) */}
+      <PicturesqueFarmhouse position={[-5.0, 0.52, -5.5]} />
 
-      {/* 5. Detailed Red Agricultural Tractor with Yellow Rims (Parked on Road) */}
-      <ModernAgriculturalTractor position={[0.8, 0.48, -2.8]} rotation={[0, -0.25, 0]} />
+      {/* 5. Detailed Red Agricultural Tractor with Yellow Rims (Dedicated Apron Bay) */}
+      <ModernAgriculturalTractor position={[3.2, 0.48, -3.5]} rotation={[0, -0.2, 0]} />
 
-      {/* 6. Prominent Sunflower Field & Rustic Tool Shed (Left-Middle Foreground) */}
-      <OrganizedSunflowerField position={[-7.8, 0.5, 6.5]} />
+      {/* 6. Prominent Sunflower Field (Western Cultivation Zone) */}
+      <OrganizedSunflowerField position={[-9.2, 0.5, 6.0]} />
 
-      {/* 7. Animal Enclosure & Sheep Pen (Behind Sunflower Field) */}
-      <PastureAndSheepPen position={[-9.5, 0.5, -0.5]} />
+      {/* 6b. Dedicated Standalone Rustic Tool Shed & Work Station (Western Perimeter Buffer) */}
+      <RusticToolShed position={[-14.0, 0.5, 6.0]} rotation={[0, 0.2, 0]} />
 
-      {/* 8. Weathered Timber Barn & Rotating Wooden Windmill */}
-      <RusticBarnAndWindmill barnPos={[7.5, 0.5, -4.5]} windmillPos={[12.2, 0.5, -7.5]} />
+      {/* 7. Animal Enclosure & Sheep Pen (Western Pasture Zone) */}
+      <PastureAndSheepPen position={[-12.0, 0.5, -2.5]} />
+
+      {/* 8. Weathered Timber Barn & Rotating Wooden Windmill (Northeastern Farmstead) */}
+      <RusticBarnAndWindmill barnPos={[8.5, 0.5, -5.5]} windmillPos={[13.8, 0.5, -8.5]} />
 
       {/* 9. Turquoise Mountain Pool & Stream (Right Plateau Edge) */}
       <TurquoiseMountainPoolAndStream />
@@ -1345,7 +1423,7 @@ export function FarmScene({
       {/* 10. Natural Botanical Trees (Oaks, Pines & Pale Rose Blossoms) */}
       <NaturalBotanicalVegetation />
 
-      {/* 11. 4 Interactive Cultivated Vegetable Furrows (Lower-Middle Foreground) */}
+      {/* 11. 4 Interactive Cultivated Vegetable Furrows in Balanced 2x2 Grid */}
       {furrows.map((furrow) => {
         const plot = plotByRow[furrow.id];
         return (
@@ -1354,7 +1432,7 @@ export function FarmScene({
             id={furrow.id}
             type={plot ? plot.cropType : 'wheat'}
             growthStage={plot ? plot.growthStage : 'vegetative'}
-            zPos={furrow.zPos}
+            position={[furrow.xPos, 0.45, furrow.zPos]}
             isSelected={selectedRowId === furrow.id}
             onSelect={onSelectRow}
             soilMoisturePercent={soilMoisturePercent}

@@ -99,9 +99,9 @@
 }
 
 .add-crop-close-btn:hover {
-  background: #EAE2D2;
-  color: #243B2E;
-  border-color: #243B2E;
+  background: #EDE8DB;
+  color: #183D2B;
+  border-color: #183D2B;
 }
 
 /* Error Alert */
@@ -184,15 +184,15 @@
 
 .crop-select-card:hover {
   background: #FFFFFF;
-  border-color: #243B2E;
+  border-color: #183D2B;
   transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(36, 59, 46, 0.08);
+  box-shadow: 0 4px 14px rgba(24, 61, 43, 0.08);
 }
 
 .crop-select-card.selected {
   background: #FFFFFF;
-  border-color: #243B2E;
-  box-shadow: 0 0 0 2px #243B2E, 0 6px 18px rgba(36, 59, 46, 0.12);
+  border-color: #183D2B;
+  box-shadow: 0 0 0 2px #183D2B, 0 6px 18px rgba(24, 61, 43, 0.12);
 }
 
 .crop-card-top {
@@ -212,8 +212,8 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #243B2E;
-  color: #F5F0E6;
+  background: #183D2B;
+  color: #FCFBF7;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -301,13 +301,13 @@
 
 .furrow-select-pill:hover {
   background: #FFFFFF;
-  border-color: #243B2E;
+  border-color: #183D2B;
 }
 
 .furrow-select-pill.selected {
-  background: #EAE2D2;
-  border-color: #243B2E;
-  box-shadow: 0 0 0 1.5px #243B2E;
+  background: #EDE8DB;
+  border-color: #183D2B;
+  box-shadow: 0 0 0 1.5px #183D2B;
 }
 
 .furrow-pill-title {
@@ -321,8 +321,8 @@
   font-weight: 800;
   padding: 1px 5px;
   border-radius: 4px;
-  background: #243B2E;
-  color: #F5F0E6;
+  background: #183D2B;
+  color: #FCFBF7;
 }
 
 .furrow-name {
@@ -378,9 +378,9 @@
 
 .add-crop-select:focus,
 .add-crop-input:focus {
-  border-color: #243B2E;
+  border-color: #16281D;
   background: #FFFFFF;
-  box-shadow: 0 0 0 2px rgba(36, 59, 46, 0.12);
+  box-shadow: 0 0 0 2px rgba(22, 40, 29, 0.12);
 }
 
 .subgroup-helper {
@@ -447,18 +447,19 @@
   gap: 8px;
   padding: 9px 22px;
   border-radius: 8px;
-  border: 1px solid #243B2E;
-  background: #243B2E;
-  color: #F5F0E6;
+  border: 1px solid #183D2B;
+  background: #183D2B;
+  color: #FCFBF7;
   font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.18s ease;
-  box-shadow: 0 2px 8px rgba(36, 59, 46, 0.18);
+  box-shadow: 0 2px 8px rgba(24, 61, 43, 0.18);
 }
 
 .btn-crop-plant:hover {
-  background: #1A2C22;
+  background: #24543C;
+  border-color: #B7C96B;
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(36, 59, 46, 0.24);
+  box-shadow: 0 4px 14px rgba(24, 61, 43, 0.24);
 }

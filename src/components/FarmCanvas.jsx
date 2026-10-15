@@ -64,18 +64,18 @@ export function FarmCanvas({
     let targetPos, targetLookAt;
 
     if (preset === 'top') {
-      targetPos = new THREE.Vector3(0.01, 34.0, 0.05);
+      targetPos = new THREE.Vector3(0.01, 36.0, 0.05);
       targetLookAt = new THREE.Vector3(-0.5, 0.5, 0);
     } else if (preset === 'crops') {
-      targetPos = new THREE.Vector3(5.5, 4.5, 9.5);
-      targetLookAt = new THREE.Vector3(1.2, 0.8, 5.5);
+      targetPos = new THREE.Vector3(11.5, 7.5, 14.2);
+      targetLookAt = new THREE.Vector3(3.2, 0.8, 6.2);
     } else if (preset === 'farmhouse') {
-      targetPos = new THREE.Vector3(-0.8, 3.6, 2.2);
-      targetLookAt = new THREE.Vector3(-4.2, 1.8, -3.8);
+      targetPos = new THREE.Vector3(-1.5, 3.8, 0.5);
+      targetLookAt = new THREE.Vector3(-5.0, 1.8, -5.5);
     } else {
       // 'overview' or 'reset'
-      targetPos = new THREE.Vector3(16.5, 12.0, 18.0);
-      targetLookAt = new THREE.Vector3(-0.5, 1.2, 0.0);
+      targetPos = new THREE.Vector3(17.0, 12.5, 18.5);
+      targetLookAt = new THREE.Vector3(-0.5, 1.0, 0.0);
     }
 
     targetViewRef.current = { pos: targetPos, target: targetLookAt };
@@ -91,16 +91,16 @@ export function FarmCanvas({
   // Smoothly focus camera when a furrow row is selected
   useEffect(() => {
     if (!selectedRowId) return;
-    const rowZMap = {
-      'row-1': 0.5,
-      'row-2': 3.8,
-      'row-3': 7.1,
-      'row-4': 10.4,
+    const rowPosMap = {
+      'row-1': { x: 7.0, z: 3.5 },
+      'row-2': { x: -0.6, z: 3.5 },
+      'row-3': { x: -0.6, z: 8.8 },
+      'row-4': { x: 7.0, z: 8.8 },
     };
-    const targetZ = rowZMap[selectedRowId] ?? 5.5;
+    const target = rowPosMap[selectedRowId] ?? { x: 3.2, z: 6.2 };
     targetViewRef.current = {
-      pos: new THREE.Vector3(6.5, 3.8, targetZ + 3.8),
-      target: new THREE.Vector3(1.2, 0.8, targetZ),
+      pos: new THREE.Vector3(target.x + 4.5, 3.8, target.z + 4.2),
+      target: new THREE.Vector3(target.x, 0.8, target.z),
     };
     const frameId = requestAnimationFrame(() => {
       onPresetChange?.('crops');
@@ -132,7 +132,7 @@ export function FarmCanvas({
             {/* Elevated Cinematic Perspective Camera framing the farm properly */}
             <PerspectiveCamera
               makeDefault
-              position={[16.5, 12.0, 18.0]}
+              position={[17.0, 12.5, 18.5]}
               fov={36}
               near={0.5}
               far={350}
@@ -147,7 +147,7 @@ export function FarmCanvas({
               maxDistance={70}
               maxPolarAngle={Math.PI / 2.05} // Prevent sub-ground camera clipping
               minPolarAngle={Math.PI / 16}
-              target={[-0.5, 1.2, 0.0]}
+              target={[-0.5, 1.0, 0.0]}
               onStart={handleUserOrbitStart}
             />
 
