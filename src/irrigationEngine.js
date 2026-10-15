@@ -486,6 +486,7 @@ export function evaluateForecastAwareStrategy(
       projectedMoisture: fallback.projectedMoisture,
       fallbackApplied: true,
       forecastStatus,
+      totalRainMm: null,
       reason: fallbackReason,
       warnings,
     };
@@ -505,6 +506,7 @@ export function evaluateForecastAwareStrategy(
       projectedMoisture,
       fallbackApplied: false,
       forecastStatus,
+      totalRainMm,
       reason: `Current soil moisture (${moisture.toFixed(1)}%) is at or above dry threshold (${dryThreshold.toFixed(1)}%). No irrigation required.`,
       warnings: [],
     };
@@ -521,6 +523,7 @@ export function evaluateForecastAwareStrategy(
       projectedMoisture,
       fallbackApplied: false,
       forecastStatus,
+      totalRainMm,
       // Clearly clarify that DEFER means postpone and re-evaluate, not permanently skip
       reason: `Soil moisture (${moisture.toFixed(1)}%) is dry, but upcoming forecast predicts ${totalRainMm.toFixed(1)} mm rain in the next ${forecastWindowHours} hours (projected +${rainGain.toFixed(1)}% moisture). Irrigation is deferred until after the rain event; re-evaluate soil moisture after rainfall.`,
       warnings: [],
@@ -542,6 +545,7 @@ export function evaluateForecastAwareStrategy(
       projectedMoisture,
       fallbackApplied: false,
       forecastStatus,
+      totalRainMm,
       reason: `Soil moisture is dry (${moisture.toFixed(1)}%). Upcoming rain will provide ${totalRainMm.toFixed(1)} mm (+${rainGain.toFixed(1)}% moisture). Reduced irrigation to ${waterAppliedMm.toFixed(1)} mm to supplement rain and reach target moisture (${targetMoisture.toFixed(1)}%).`,
       warnings: [],
     };
@@ -560,6 +564,7 @@ export function evaluateForecastAwareStrategy(
     projectedMoisture,
     fallbackApplied: false,
     forecastStatus,
+    totalRainMm,
     reason: `Soil moisture (${moisture.toFixed(1)}%) is dry and forecasted rain within ${forecastWindowHours} hours is negligible (${totalRainMm.toFixed(1)} mm). Applying full irrigation (${waterAppliedMm.toFixed(1)} mm) to protect crops.`,
     warnings: [],
   };
@@ -658,6 +663,7 @@ export function compareIrrigation(environmentState, initialSoilMoisture, options
       decisionTime,
       forecastWindowHours: validConfig.forecastWindowHours,
       forecastStatus: forecastAware.forecastStatus,
+      totalRainMm: forecastAware.totalRainMm ?? null,
       location: env?.location || null,
     },
     conventional: {
@@ -674,6 +680,7 @@ export function compareIrrigation(environmentState, initialSoilMoisture, options
       projectedMoisture: forecastAware.projectedMoisture,
       fallbackApplied: forecastAware.fallbackApplied,
       forecastStatus: forecastAware.forecastStatus,
+      totalRainMm: forecastAware.totalRainMm ?? null,
       reason: forecastAware.reason,
     },
     comparison: {
@@ -681,6 +688,8 @@ export function compareIrrigation(environmentState, initialSoilMoisture, options
       waterSavedPercent,
       recommendation,
       summary,
+      totalRainMm: forecastAware.totalRainMm ?? null,
+      isRainInsideWindow: Boolean(forecastAware.totalRainMm && forecastAware.totalRainMm > 0),
     },
     assumptions: [
       'SIMULATION ONLY: Simulated water quantities and soil moisture changes are simplified illustrative teaching formulas, NOT calibrated agronomic prescriptions (such as FAO-56 Penman-Monteith).',

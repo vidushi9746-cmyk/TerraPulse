@@ -1,4 +1,4 @@
-import { Satellite, Sun, CloudRain, CloudLightning } from 'lucide-react';
+import { Satellite, Sun, Cloud, CloudRain, CloudLightning } from 'lucide-react';
 import './ScenarioSelector.css';
 
 const scenarios = [
@@ -13,6 +13,12 @@ const scenarios = [
     name: 'Sunny Day',
     description: 'Hot conditions with little or no expected rainfall in window.',
     icon: Sun,
+  },
+  {
+    id: 'cloudy',
+    name: 'Cloudy / Overcast',
+    description: 'Overcast skies; moderate humidity with reduced evapotranspiration.',
+    icon: Cloud,
   },
   {
     id: 'rainy',

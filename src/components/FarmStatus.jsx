@@ -70,14 +70,14 @@ export function FarmStatus({ simulation = {} }) {
           </div>
 
           <div className="gauge-value-row">
-            <span className="stat-big">{moisturePercent}%</span>
+            <span className="stat-big">{typeof moisturePercent === 'number' ? moisturePercent.toFixed(2) : 'N/A'}%</span>
           </div>
 
           <div className="meter-track">
             <div
               className="meter-fill"
               style={{
-                width: `${moisturePercent}%`,
+                width: `${Math.min(100, Math.max(0, typeof moisturePercent === 'number' ? moisturePercent : 0))}%`,
                 background: soilColor,
               }}
             ></div>
@@ -170,7 +170,7 @@ export function FarmStatus({ simulation = {} }) {
           <div className="advisory-meta-item">
             <span className="ad-meta-label">Water Conserved Today:</span>
             <span className="ad-meta-val text-emerald font-semibold">
-              {simulation?.waterPreservedTodayGal ?? 0} Gal Saved
+              {(simulation?.waterSavedLitres ?? (typeof simulation?.waterPreservedTodayGal === 'number' ? Math.round(simulation.waterPreservedTodayGal / 0.264172) : 0)).toLocaleString()} L Saved
             </span>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import assert from 'node:assert';
 import { describe, it } from 'node:test';
+import { estimateSoilMoisture } from './farmSimulation.js';
 import {
   compareIrrigation,
   evaluateConventionalStrategy,
@@ -53,6 +54,9 @@ describe('Irrigation Engine Test Suite', () => {
     assert.ok(result.forecastAware.reason.includes('deferred until after the rain event'));
 
     // Comparison summary
+    assert.strictEqual(result.scenario.totalRainMm, 20.0);
+    assert.strictEqual(result.comparison.totalRainMm, 20.0);
+    assert.strictEqual(result.comparison.isRainInsideWindow, true);
     assert.strictEqual(result.comparison.waterSavedMm, 68.0);
     assert.strictEqual(result.comparison.waterSavedPercent, 100.0);
     assert.strictEqual(result.comparison.recommendation, 'FORECAST_AWARE');
@@ -79,6 +83,9 @@ describe('Irrigation Engine Test Suite', () => {
 
     assert.strictEqual(result.forecastAware.decision, 'IRRIGATE');
     assert.strictEqual(result.forecastAware.waterAppliedMm, 68.0);
+    assert.strictEqual(result.scenario.totalRainMm, 0.0);
+    assert.strictEqual(result.comparison.totalRainMm, 0.0);
+    assert.strictEqual(result.comparison.isRainInsideWindow, false);
     assert.strictEqual(result.comparison.waterSavedMm, 0.0);
     assert.strictEqual(result.comparison.recommendation, 'CONVENTIONAL');
   });
@@ -411,5 +418,173 @@ describe('Irrigation Engine Test Suite', () => {
       () => filterForecastWindow([], '2026-10-14T12:00:00.000Z', 2.5),
       /Invalid windowHours: must be a positive integer representing whole hours/
     );
+  });
+
+  it('Integration: End-to-end weather timeline progression to moisture estimation and irrigation decision', () => {
+    // 1. Initial starting soil moisture at baseline (34.0%)
+    let moisture = 34.0;
+
+    // 2. Simulate 2 hours of hot, dry weather (28°C, 35% humidity, 12 km/h wind, 0 mm rain)
+    for (let hour = 0; hour < 2; hour++) {
+      const step = estimateSoilMoisture(moisture, 28.0, 35, 12.0, 0.0);
+      moisture = Math.round(step.soilMoisture * 100) / 100;
+    }
+
+    // Mathematical derivation:
+    // Potential evap: (28 * 0.1 + 12 * 0.05) = 3.4
+    // Dryness factor: (100 - 35) / 100 = 0.65
+    // Moisture loss per hour: 3.4 * 0.65 = 2.21
+    // Moisture after hour 0: 34.0 - 2.21 = 31.79%
+    // Moisture after hour 1: 31.79 - 2.21 = 29.58%
+    assert.strictEqual(moisture, 29.58);
+
+    // 3. Evaluate 6-hour forecast window with upcoming rain
+    // 6-hour forecast: 6 intervals with 2.5 mm rain each = 15.0 mm inside window
+    const decisionTime = '2026-10-15T14:00:00.000Z';
+    const forecast = [
+      { timestamp: '2026-10-15T15:00:00.000Z', precipitation: 2.5 },
+      { timestamp: '2026-10-15T16:00:00.000Z', precipitation: 2.5 },
+      { timestamp: '2026-10-15T17:00:00.000Z', precipitation: 2.5 },
+      { timestamp: '2026-10-15T18:00:00.000Z', precipitation: 2.5 },
+      { timestamp: '2026-10-15T19:00:00.000Z', precipitation: 2.5 },
+      { timestamp: '2026-10-15T20:00:00.000Z', precipitation: 2.5 },
+    ];
+
+    const envState = {
+      ...baseEnvironmentState,
+      updatedAt: decisionTime,
+      forecast,
+    };
+
+    // 4. Compare irrigation using the simulated moisture (29.58%)
+    const result = compareIrrigation(envState, moisture, {
+      forecastWindowHours: 6,
+      decisionTime,
+      dryThreshold: 35.0,
+      targetMoisture: 60.0,
+    });
+
+    // Conventional strategy:
+    // Deficit = 60.0 - 29.58 = 30.42%
+    // Water needed = 30.42 / 0.5 = 60.84 mm water applied
+    assert.strictEqual(result.conventional.decision, 'IRRIGATE');
+    assert.strictEqual(result.conventional.waterAppliedMm, 60.84);
+    assert.strictEqual(result.conventional.projectedMoisture, 60.0);
+
+    // Forecast-aware strategy:
+    // Rain in window = 15.0 mm -> rainGain = 15.0 * 0.5 = 7.5%
+    // Projected moisture from rain = 29.58 + 7.5 = 37.08%
+    // Since 37.08% >= dryThreshold (35.0%) and rain (15.0 mm) >= minSignificantRainMm (5.0 mm):
+    // Decision is DEFER (0.0 mm applied)
+    assert.strictEqual(result.forecastAware.decision, 'DEFER');
+    assert.strictEqual(result.forecastAware.waterAppliedMm, 0.0);
+    assert.strictEqual(result.forecastAware.projectedMoisture, 37.08);
+    assert.strictEqual(result.forecastAware.fallbackApplied, false);
+
+    // Comparison water savings
+    assert.strictEqual(result.comparison.waterSavedMm, 60.84);
+    assert.strictEqual(result.comparison.waterSavedPercent, 100.0);
+    assert.strictEqual(result.comparison.recommendation, 'FORECAST_AWARE');
+  });
+
+  it('Regression 5: scenario.totalRainMm and comparison.isRainInsideWindow contract', () => {
+    // 1. Valid forecast with rainfall
+    const forecastRain = [
+      { timestamp: '2026-10-15T13:00:00.000Z', precipitation: 4.0 },
+      { timestamp: '2026-10-15T14:00:00.000Z', precipitation: 4.0 },
+      { timestamp: '2026-10-15T15:00:00.000Z', precipitation: 0.0 },
+      { timestamp: '2026-10-15T16:00:00.000Z', precipitation: 0.0 },
+      { timestamp: '2026-10-15T17:00:00.000Z', precipitation: 0.0 },
+      { timestamp: '2026-10-15T18:00:00.000Z', precipitation: 0.0 },
+    ];
+    const envRain = {
+      ...baseEnvironmentState,
+      updatedAt: '2026-10-15T12:00:00.000Z',
+      forecast: forecastRain,
+    };
+    const resRain = compareIrrigation(envRain, 25.0, { forecastWindowHours: 6 });
+    assert.strictEqual(resRain.scenario.totalRainMm, 8.0);
+    assert.strictEqual(resRain.comparison.totalRainMm, 8.0);
+    assert.strictEqual(resRain.comparison.isRainInsideWindow, true);
+
+    // 2. Valid forecast with zero rainfall
+    const forecastDry = [
+      { timestamp: '2026-10-15T13:00:00.000Z', precipitation: 0.0 },
+      { timestamp: '2026-10-15T14:00:00.000Z', precipitation: 0.0 },
+      { timestamp: '2026-10-15T15:00:00.000Z', precipitation: 0.0 },
+      { timestamp: '2026-10-15T16:00:00.000Z', precipitation: 0.0 },
+      { timestamp: '2026-10-15T17:00:00.000Z', precipitation: 0.0 },
+      { timestamp: '2026-10-15T18:00:00.000Z', precipitation: 0.0 },
+    ];
+    const envDry = {
+      ...baseEnvironmentState,
+      updatedAt: '2026-10-15T12:00:00.000Z',
+      forecast: forecastDry,
+    };
+    const resDry = compareIrrigation(envDry, 25.0, { forecastWindowHours: 6 });
+    assert.strictEqual(resDry.scenario.totalRainMm, 0.0);
+    assert.strictEqual(resDry.comparison.totalRainMm, 0.0);
+    assert.strictEqual(resDry.comparison.isRainInsideWindow, false);
+
+    // 3. Unavailable forecast
+    const envUnavail = { ...baseEnvironmentState, forecast: null };
+    const resUnavail = compareIrrigation(envUnavail, 25.0, { forecastWindowHours: 6 });
+    assert.strictEqual(resUnavail.scenario.totalRainMm, null);
+    assert.strictEqual(resUnavail.comparison.totalRainMm, null);
+    assert.strictEqual(resUnavail.comparison.isRainInsideWindow, false);
+  });
+
+  it('Regression 6: Empty forecast array triggers UNAVAILABLE and safe fallback', () => {
+    // When live forecast is empty ([]), it must NOT synthesize 0.0 mm rain or mark VALID
+    const emptyEnv = {
+      ...baseEnvironmentState,
+      updatedAt: '2026-10-15T12:00:00.000Z',
+      forecast: [],
+    };
+
+    const res = compareIrrigation(emptyEnv, 25.0, { forecastWindowHours: 6 });
+    assert.strictEqual(res.forecastAware.forecastStatus, 'UNAVAILABLE');
+    assert.strictEqual(res.forecastAware.fallbackApplied, true);
+    assert.strictEqual(res.forecastAware.decision, 'IRRIGATE');
+    assert.strictEqual(res.scenario.totalRainMm, null);
+    assert.strictEqual(res.comparison.isRainInsideWindow, false);
+    assert.ok(res.warnings.length > 0);
+  });
+
+  it('Regression 7: UTC Timestamp alignment and past interval exclusion', () => {
+    // Decision time: 14:00:00Z. 6-hour window is 14:00Z to 20:00Z.
+    // An Open-Meteo payload provides intervals from 00:00Z to 23:00Z.
+    // Intervals 00:00Z to 14:00Z are past readings (must be excluded).
+    // Future intervals 15:00Z to 20:00Z (6 intervals) must be evaluated.
+    const fullDayForecast = [];
+    for (let h = 0; h < 24; h++) {
+      const hourStr = String(h).padStart(2, '0');
+      // Past hours have 10 mm rain each (deliberately high)
+      // Future window hours (15:00 to 20:00) have 2.0 mm rain each (total 12 mm)
+      // Hours past window (> 20:00) have 50 mm rain each
+      const precip = h <= 14 ? 10.0 : h <= 20 ? 2.0 : 50.0;
+      fullDayForecast.push({
+        timestamp: `2026-10-15T${hourStr}:00:00.000Z`,
+        precipitation: precip,
+      });
+    }
+
+    const decisionTime = '2026-10-15T14:00:00.000Z';
+    const env = {
+      ...baseEnvironmentState,
+      updatedAt: decisionTime,
+      forecast: fullDayForecast,
+    };
+
+    const res = compareIrrigation(env, 25.0, { forecastWindowHours: 6, decisionTime });
+    assert.strictEqual(res.scenario.forecastStatus, 'VALID');
+    // Verifies past rain (150 mm) and post-window rain (150 mm) are excluded;
+    // exactly 6 intervals * 2.0 mm = 12.0 mm is considered.
+    assert.strictEqual(res.scenario.totalRainMm, 12.0);
+    assert.strictEqual(res.comparison.totalRainMm, 12.0);
+    assert.strictEqual(res.comparison.isRainInsideWindow, true);
+    // 25.0% + (12.0 * 0.5) = 31.0% < 35.0% -> REDUCE (58 mm water applied)
+    assert.strictEqual(res.forecastAware.decision, 'REDUCE');
+    assert.strictEqual(res.forecastAware.waterAppliedMm, 58.0);
   });
 });

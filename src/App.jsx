@@ -129,6 +129,8 @@ function App() {
       setHourlyForecast(forecast);
     } catch (err) {
       console.error('Failed to fetch Open-Meteo weather data:', err);
+      setLiveWeather(null);
+      setHourlyForecast([]);
       setWeatherError(err.message || 'Unable to connect to Open-Meteo meteorological service');
     } finally {
       setIsWeatherLoading(false);
@@ -178,6 +180,16 @@ function App() {
           weatherState: 'Clear sky',
         };
       }
+      if (selectedScenario === 'cloudy') {
+        return {
+          tempC: 19.5 + Math.sin(hourOffset * 0.26) * 2,
+          humidity: 72,
+          windSpeed: 10.0,
+          precipitation: 0.0,
+          weatherCode: 3,
+          weatherState: 'Overcast',
+        };
+      }
       if (selectedScenario === 'rainy') {
         const rainProfile = [1.5, 2.0, 2.0, 1.5, 1.0, 0.0];
         const precip = hourOffset < rainProfile.length ? rainProfile[hourOffset] : 0.0;
@@ -204,42 +216,53 @@ function App() {
       }
 
       // Default: 'live' Open-Meteo telemetry & hourly forecast
+      const baseMs = liveWeather?.updatedAt
+        ? new Date(liveWeather.updatedAt).getTime()
+        : null;
+      const targetMs = baseMs !== null ? baseMs + hourOffset * 60 * 60 * 1000 : null;
+
       if (hourOffset === 0 && liveWeather) {
         return {
-          tempC: liveWeather.temperature !== null ? liveWeather.temperature : 22.0,
-          humidity: liveWeather.humidity !== null ? liveWeather.humidity : 50,
-          windSpeed: liveWeather.windSpeed !== null ? liveWeather.windSpeed : 10,
-          precipitation: liveWeather.precipitation !== null ? liveWeather.precipitation : 0,
-          weatherCode: liveWeather.weatherCode,
+          tempC: typeof liveWeather.temperature === 'number' ? liveWeather.temperature : null,
+          humidity: typeof liveWeather.humidity === 'number' ? liveWeather.humidity : null,
+          windSpeed: typeof liveWeather.windSpeed === 'number' ? liveWeather.windSpeed : null,
+          precipitation: typeof liveWeather.precipitation === 'number' ? liveWeather.precipitation : null,
+          weatherCode: liveWeather.weatherCode ?? null,
           weatherState: liveWeather.weatherState || 'Normal',
+          timestamp: liveWeather.updatedAt,
         };
       }
 
-      if (hourlyForecast && hourlyForecast[hourOffset]) {
-        const item = hourlyForecast[hourOffset];
-        return {
-          tempC: item.temperature !== null ? item.temperature : 22.0,
-          humidity: item.humidity !== null ? item.humidity : 50,
-          windSpeed: item.windSpeed !== null ? item.windSpeed : 10,
-          precipitation: item.precipitation !== null ? item.precipitation : 0,
-          weatherCode: item.weatherCode,
-          weatherState: item.weatherState || 'Normal',
-          timestamp: item.timestamp,
-        };
+      if (Array.isArray(hourlyForecast) && hourlyForecast.length > 0 && targetMs !== null) {
+        const item = hourlyForecast.find((h) => {
+          if (!h?.timestamp) return false;
+          const t = new Date(h.timestamp).getTime();
+          return !Number.isNaN(t) && Math.abs(t - targetMs) <= 30 * 60 * 1000;
+        });
+
+        if (item) {
+          return {
+            tempC: typeof item.temperature === 'number' ? item.temperature : null,
+            humidity: typeof item.humidity === 'number' ? item.humidity : null,
+            windSpeed: typeof item.windSpeed === 'number' ? item.windSpeed : null,
+            precipitation: typeof item.precipitation === 'number' ? item.precipitation : null,
+            weatherCode: item.weatherCode ?? null,
+            weatherState: item.weatherState || 'Normal',
+            timestamp: item.timestamp,
+          };
+        }
       }
 
-      // Beyond available forecast intervals: What-if extrapolation
-      const lastItem =
-        hourlyForecast && hourlyForecast.length > 0
-          ? hourlyForecast[hourlyForecast.length - 1]
-          : null;
+      // Beyond available forecast horizon or forecast unavailable:
+      // Preserve unknown values as null; never invent zero rainfall.
       return {
-        tempC: lastItem?.temperature ?? 22.0,
-        humidity: lastItem?.humidity ?? 50,
-        windSpeed: lastItem?.windSpeed ?? 10,
-        precipitation: 0.0,
-        weatherCode: 1,
-        weatherState: 'Mainly clear',
+        tempC: null,
+        humidity: null,
+        windSpeed: null,
+        precipitation: null,
+        weatherCode: null,
+        weatherState: 'Data Unavailable',
+        timestamp: targetMs !== null ? new Date(targetMs).toISOString() : null,
       };
     },
     [selectedScenario, liveWeather, hourlyForecast]
@@ -270,6 +293,11 @@ function App() {
 
   // 6-hour future forecast slice from active simulation point
   const activeForecastSlice = useMemo(() => {
+    // If in live mode and no hourly forecast is available, return null to trigger safe engine fallback
+    if (selectedScenario === 'live' && (!Array.isArray(hourlyForecast) || hourlyForecast.length === 0)) {
+      return null;
+    }
+
     const intervals = [];
     const baseDate = new Date(activeSimTimestamp);
 
@@ -278,7 +306,7 @@ function App() {
       const forecastDate = new Date(baseDate.getTime() + f * 60 * 60 * 1000).toISOString();
       const hWeather = getTimelineWeather(forecastOffset);
       intervals.push({
-        timestamp: forecastDate,
+        timestamp: hWeather.timestamp || forecastDate,
         temperature: hWeather.tempC,
         humidity: hWeather.humidity,
         windSpeed: hWeather.windSpeed,
@@ -287,7 +315,7 @@ function App() {
       });
     }
     return intervals;
-  }, [simStepHours, activeSimTimestamp, getTimelineWeather]);
+  }, [selectedScenario, hourlyForecast, simStepHours, activeSimTimestamp, getTimelineWeather]);
 
   // Irrigation Engine Evaluation: Compare Conventional vs Forecast-Aware Strategy
   // Incorporates configured crop thresholds and parcel acreage
@@ -332,7 +360,7 @@ function App() {
   const weatherData = useMemo(() => {
     const activeHourWeather = getTimelineWeather(simStepHours);
     const tempC = activeHourWeather.tempC;
-    const tempF = (tempC * 9) / 5 + 32;
+    const tempF = tempC !== null && tempC !== undefined ? (tempC * 9) / 5 + 32 : null;
     const humidity = activeHourWeather.humidity;
     const windSpeed = activeHourWeather.windSpeed;
     const precipitation = activeHourWeather.precipitation;
@@ -423,7 +451,8 @@ function App() {
 
     // Litres conserved over configured farm parcel area: litres = mm × farmAreaSqm
     const waterSavedMm = comparisonResult?.comparison?.waterSavedMm || 0;
-    const waterPreservedTodayGal = Math.round(waterSavedMm * farmAreaSqm * 0.264172);
+    const waterSavedLitres = Math.round(waterSavedMm * farmAreaSqm);
+    const waterPreservedTodayGal = Math.round(waterSavedLitres * 0.264172);
 
     return {
       id: isRain ? 'rainy' : isCloudy ? 'cloudy' : 'sunny',
@@ -450,7 +479,7 @@ function App() {
 
       // Deterministic simulation estimates based on live model equations
       simulation: {
-        soilMoisturePercent: Math.round(currentSoilMoisture),
+        soilMoisturePercent: typeof currentSoilMoisture === 'number' ? Number(currentSoilMoisture.toFixed(2)) : 34,
         soilMoistureStatus: isLowMoisture
           ? 'Drying (Depletion Phase)'
           : isHighMoisture
@@ -460,11 +489,12 @@ function App() {
         cropHealthScore,
         cropHealthStatus,
         cropHealthColor,
-        soilTemperatureC: Number((tempC * 0.85).toFixed(1)),
+        soilTemperatureC: tempC !== null && tempC !== undefined ? Number((tempC * 0.85).toFixed(1)) : 18.5,
         evapotranspirationRateMmDay: etRate,
         irrigationAction,
         irrigationActionColor,
         irrigationRecommendation,
+        waterSavedLitres,
         waterPreservedTodayGal,
         activeZones: `${farmConfig.plots.length} / 4 Furrows Cultivated`,
         isSimulatedModel: true,
@@ -625,7 +655,15 @@ function App() {
                 <span className="metric-pill-sub">Precipitation</span>
               </div>
               <div className="metric-pill-badge">
-                <span>{comparisonResult?.comparison?.isRainInsideWindow ? 'Rain in 6h Window' : 'Dry 6h Window'}</span>
+                <span>
+                  {comparisonResult?.scenario?.forecastStatus === 'UNAVAILABLE'
+                    ? 'Forecast N/A'
+                    : comparisonResult?.scenario?.forecastStatus === 'INSUFFICIENT'
+                    ? 'Sparse Rain Data'
+                    : comparisonResult?.comparison?.isRainInsideWindow
+                    ? 'Rain in 6h Window'
+                    : 'Dry 6h Window'}
+                </span>
               </div>
             </div>
 
@@ -1088,6 +1126,8 @@ function App() {
                         : `What-If: ${
                             selectedScenario === 'sunny'
                               ? 'Sunny Day (0 mm rain)'
+                              : selectedScenario === 'cloudy'
+                              ? 'Cloudy / Overcast (0 mm rain)'
                               : selectedScenario === 'rainy'
                               ? 'Rain Expected (8 mm rain)'
                               : 'Heavy Rain (24 mm rain)'
@@ -1108,8 +1148,10 @@ function App() {
                       setWeatherMode(mode);
                       if (mode === 'live') {
                         setSelectedScenario('live');
-                      } else if (mode === 'sunny' || mode === 'cloudy') {
+                      } else if (mode === 'sunny') {
                         setSelectedScenario('sunny');
+                      } else if (mode === 'cloudy') {
+                        setSelectedScenario('cloudy');
                       } else if (mode === 'rainy') {
                         setSelectedScenario('rainy');
                       }
@@ -1133,6 +1175,12 @@ function App() {
                     onScenarioChange={(scenId) => {
                       setSelectedScenario(scenId);
                       setSimStepHours(0);
+                      if (scenId === 'live') {
+                        setWeatherMode('live');
+                        loadLiveWeatherData(selectedLocation.latitude, selectedLocation.longitude);
+                      } else {
+                        setWeatherMode(scenId === 'heavy-rain' ? 'rainy' : scenId);
+                      }
                     }}
                   />
                 </div>
@@ -1164,6 +1212,8 @@ function App() {
         onClose={() => setIsLocationSearchOpen(false)}
         onSelectLocation={(newLocation) => {
           setSelectedLocation(newLocation);
+          setLiveWeather(null);
+          setHourlyForecast([]);
           setSelectedScenario('live');
           setWeatherMode('live');
           setSimStepHours(0);
