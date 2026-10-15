@@ -5,10 +5,10 @@
 .comparison-panel {
   width: 100%;
   padding: 20px;
-  border: 1px solid rgba(82, 118, 83, 0.25);
+  border: 1px solid rgba(74, 109, 75, 0.25);
   border-radius: var(--radius-lg, 14px);
-  background: #FFFFFF;
-  color: var(--primary-text, #292E27);
+  background: var(--bg-surface, #FAF5EB);
+  color: var(--primary-text, #222920);
   box-shadow: var(--shadow-card);
   box-sizing: border-box;
   font-family: inherit;

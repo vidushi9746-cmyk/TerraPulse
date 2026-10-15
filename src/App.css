@@ -1267,12 +1267,12 @@ p, span, label, input, select, button, a {
   justify-content: space-between;
   gap: 16px;
   padding: 12px 22px;
-  background: #183D2B;
+  background: #143524;
   color: #FCFBF7;
-  border: 1px solid rgba(82, 118, 83, 0.25);
+  border: 1px solid rgba(74, 109, 75, 0.28);
   border-radius: var(--radius-lg);
   margin-bottom: 16px;
-  box-shadow: 0 4px 18px rgba(16, 26, 18, 0.18);
+  box-shadow: 0 4px 18px rgba(12, 28, 18, 0.22);
   box-sizing: border-box;
 }
 
@@ -1591,10 +1591,10 @@ p, span, label, input, select, button, a {
   right: 0;
   width: 370px;
   max-width: calc(100vw - 32px);
-  background: #FFFFFF;
-  border: 1px solid rgba(135, 156, 122, 0.35);
+  background: var(--bg-surface, #FAF5EB);
+  border: 1px solid rgba(74, 109, 75, 0.35);
   border-radius: var(--radius-lg);
-  box-shadow: 0 16px 45px rgba(36, 59, 46, 0.22), 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 16px 45px rgba(20, 53, 36, 0.22), 0 4px 12px rgba(0, 0, 0, 0.05);
   padding: 14px;
   z-index: 10000;
   display: flex;
@@ -1608,7 +1608,7 @@ p, span, label, input, select, button, a {
   align-items: center;
   justify-content: space-between;
   padding-bottom: 8px;
-  border-bottom: 1px solid rgba(135, 156, 122, 0.2);
+  border-bottom: 1px solid rgba(74, 109, 75, 0.2);
 }
 
 .menu-header-text {
@@ -1635,8 +1635,8 @@ p, span, label, input, select, button, a {
   align-items: center;
   gap: 5px;
   padding: 4px 9px;
-  background: #FAF6EE;
-  border: 1px solid rgba(135, 156, 122, 0.35);
+  background: var(--bg-surface-cream, #EAE3D2);
+  border: 1px solid rgba(74, 109, 75, 0.35);
   border-radius: var(--radius-full);
   color: var(--deep-pine);
   font-size: 0.68rem;
@@ -1663,8 +1663,8 @@ p, span, label, input, select, button, a {
   align-items: flex-start;
   gap: 10px;
   padding: 8px 10px;
-  background: #FAF7F2;
-  border: 1px solid rgba(135, 156, 122, 0.2);
+  background: var(--bg-surface-cream, #EAE3D2);
+  border: 1px solid rgba(74, 109, 75, 0.2);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all 0.15s ease;
@@ -1673,15 +1673,15 @@ p, span, label, input, select, button, a {
 }
 
 .menu-scenario-card:hover {
-  background: #F3ECE0;
-  border-color: rgba(135, 156, 122, 0.45);
+  background: var(--bg-hover, #DFD7C6);
+  border-color: rgba(74, 109, 75, 0.45);
   transform: translateY(-1px);
 }
 
 .menu-scenario-card.selected {
-  background: #F7F3E9;
+  background: var(--bg-hover, #DFD7C6);
   border-color: var(--deep-pine);
-  box-shadow: 0 2px 8px rgba(36, 59, 46, 0.08);
+  box-shadow: 0 2px 8px rgba(20, 53, 36, 0.08);
 }
 
 .card-left-icon {
@@ -1691,8 +1691,8 @@ p, span, label, input, select, button, a {
   width: 28px;
   height: 28px;
   border-radius: var(--radius-sm);
-  background: #FFFFFF;
-  border: 1px solid rgba(135, 156, 122, 0.25);
+  background: var(--bg-surface, #FAF5EB);
+  border: 1px solid rgba(74, 109, 75, 0.25);
   color: var(--deep-pine);
   flex-shrink: 0;
   margin-top: 1px;
@@ -2206,8 +2206,8 @@ p, span, label, input, select, button, a {
 }
 
 .metric-pill-card {
-  background: #FDFBF7;
-  border: 1px solid rgba(82, 118, 83, 0.22);
+  background: var(--bg-surface, #FAF5EB);
+  border: 1px solid rgba(74, 109, 75, 0.22);
   border-radius: var(--radius-md);
   padding: 12px 14px;
   display: flex;
@@ -2325,15 +2325,15 @@ p, span, label, input, select, button, a {
 .farm-left-panel {
   width: 230px;
   flex-shrink: 0;
-  background: #F6F3E9;
-  border: 1px solid rgba(82, 118, 83, 0.25);
+  background: var(--bg-surface-cream, #EAE3D2);
+  border: 1px solid rgba(74, 109, 75, 0.25);
   border-radius: var(--radius-lg);
   padding: 10px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   box-sizing: border-box;
-  box-shadow: 0 4px 16px rgba(22, 40, 29, 0.06);
+  box-shadow: 0 4px 16px rgba(20, 53, 36, 0.06);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -2345,8 +2345,8 @@ p, span, label, input, select, button, a {
 
 /* Compact Current Weather Card in Left Panel */
 .left-panel-weather-card {
-  background: #EDE8DB;
-  border: 1px solid rgba(82, 118, 83, 0.28);
+  background: var(--bg-hover, #DFD7C6);
+  border: 1px solid rgba(74, 109, 75, 0.28);
   border-radius: var(--radius-md, 10px);
   padding: 10px 12px;
   display: flex;
@@ -2437,8 +2437,8 @@ p, span, label, input, select, button, a {
   width: 38px;
   height: 38px;
   border-radius: var(--radius-sm, 8px);
-  background: #FDFBF7;
-  border: 1px solid rgba(82, 118, 83, 0.25);
+  background: var(--bg-surface, #FAF5EB);
+  border: 1px solid rgba(74, 109, 75, 0.25);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
   flex-shrink: 0;
 }
@@ -2568,9 +2568,9 @@ p, span, label, input, select, button, a {
   gap: 4px;
   padding: 8px 10px;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(82, 118, 83, 0.22);
-  background: #FDFBF7;
-  color: #292E27;
+  border: 1px solid rgba(74, 109, 75, 0.22);
+  background: var(--bg-surface, #FAF5EB);
+  color: var(--primary-text, #222920);
   text-align: left;
   cursor: pointer;
   transition: all 0.18s ease;
@@ -2578,16 +2578,16 @@ p, span, label, input, select, button, a {
 }
 
 .furrow-card-item:hover {
-  border-color: #527653;
-  background: #EDE8DB;
+  border-color: #4A6D4B;
+  background: var(--bg-hover, #DFD7C6);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(22, 40, 29, 0.08);
+  box-shadow: 0 4px 12px rgba(20, 53, 36, 0.08);
 }
 
 .furrow-card-item.selected {
-  border-color: #183D2B;
-  background: #EDE8DB;
-  box-shadow: 0 0 0 1.5px #183D2B, 0 4px 12px rgba(24, 61, 43, 0.12);
+  border-color: #143524;
+  background: var(--bg-hover, #DFD7C6);
+  box-shadow: 0 0 0 1.5px #143524, 0 4px 12px rgba(20, 53, 36, 0.12);
 }
 
 .furrow-card-top {
@@ -2762,12 +2762,12 @@ p, span, label, input, select, button, a {
   flex-direction: column;
   gap: 10px;
   padding: 10px 14px;
-  background: #F6F3E9;
-  border: 1px solid rgba(82, 118, 83, 0.25);
+  background: var(--bg-surface-cream, #EAE3D2);
+  border: 1px solid rgba(74, 109, 75, 0.25);
   border-radius: var(--radius-md, 10px);
   margin-bottom: 12px;
   box-sizing: border-box;
-  box-shadow: 0 2px 8px rgba(22, 40, 29, 0.04);
+  box-shadow: 0 2px 8px rgba(20, 53, 36, 0.04);
 }
 
 .farm-workspace-header-row {
@@ -3208,8 +3208,8 @@ p, span, label, input, select, button, a {
    -------------------------------------------------------------------------- */
 .farm-bottom-controls-bar {
   width: 100%;
-  border-top: 1px solid rgba(82, 118, 83, 0.22);
-  background: #FAF7F0;
+  border-top: 1px solid rgba(74, 109, 75, 0.22);
+  background: var(--bg-surface-cream, #EAE3D2);
   border-bottom-left-radius: var(--radius-lg);
   border-bottom-right-radius: var(--radius-lg);
   overflow: hidden;
@@ -3221,15 +3221,15 @@ p, span, label, input, select, button, a {
 .farm-right-inspector {
   width: 230px;
   flex-shrink: 0;
-  background: #F6F3E9;
-  border: 1px solid rgba(82, 118, 83, 0.25);
+  background: var(--bg-surface-cream, #EAE3D2);
+  border: 1px solid rgba(74, 109, 75, 0.25);
   border-radius: var(--radius-lg);
   padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   box-sizing: border-box;
-  box-shadow: 0 4px 16px rgba(24, 61, 43, 0.06);
+  box-shadow: 0 4px 16px rgba(20, 53, 36, 0.06);
   animation: slideInRight 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -4774,10 +4774,10 @@ p, span, label, input, select, button, a {
   width: 100%;
   max-width: 540px;
   max-height: 85vh;
-  background: #FFFFFF;
-  border: 1px solid rgba(135, 156, 122, 0.35);
+  background: var(--bg-surface, #FAF5EB);
+  border: 1px solid rgba(74, 109, 75, 0.35);
   border-radius: var(--radius-lg);
-  box-shadow: 0 20px 50px rgba(36, 59, 46, 0.2);
+  box-shadow: 0 20px 50px rgba(20, 53, 36, 0.2);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -4789,8 +4789,8 @@ p, span, label, input, select, button, a {
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px 14px 20px;
-  border-bottom: 1px solid rgba(135, 156, 122, 0.25);
-  background: #FAF6EE;
+  border-bottom: 1px solid rgba(74, 109, 75, 0.25);
+  background: var(--bg-surface-cream, #EAE3D2);
 }
 
 .modal-title-wrap {
@@ -4820,8 +4820,8 @@ p, span, label, input, select, button, a {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: 1px solid rgba(135, 156, 122, 0.3);
-  background: #FFFFFF;
+  border: 1px solid rgba(74, 109, 75, 0.3);
+  background: var(--bg-surface, #FAF5EB);
   color: var(--secondary-text);
   cursor: pointer;
   transition: all 0.18s ease;
@@ -4838,8 +4838,8 @@ p, span, label, input, select, button, a {
   display: flex;
   align-items: center;
   padding: 12px 20px;
-  border-bottom: 1px solid rgba(135, 156, 122, 0.25);
-  background: #FFFFFF;
+  border-bottom: 1px solid rgba(74, 109, 75, 0.25);
+  background: var(--bg-surface, #FAF5EB);
 }
 
 .search-icon-adornment {
@@ -4852,8 +4852,8 @@ p, span, label, input, select, button, a {
 .location-search-input {
   width: 100%;
   padding: 10px 36px 10px 36px;
-  background: #FAF6EE;
-  border: 1px solid rgba(135, 156, 122, 0.35);
+  background: var(--bg-surface-cream, #EAE3D2);
+  border: 1px solid rgba(74, 109, 75, 0.35);
   border-radius: var(--radius-md);
   font-size: 0.88rem;
   font-family: inherit;

@@ -11,33 +11,33 @@
      ========================================================================== */
 
   /* Exact Color Tokens - Synchronized with TerraPulse Theme */
-  --warm-ivory: #F6F3E9;
-  --soft-cream: #EDE8DB;
-  --deep-pine: #183D2B;
-  --secondary-green: #527653;
-  --muted-sage: #527653;
+  --warm-ivory: #F4EFE4;
+  --soft-cream: #EAE3D2;
+  --deep-pine: #143524;
+  --secondary-green: #4A6D4B;
+  --muted-sage: #4A6D4B;
   --soft-sage: #B7C96B;
-  --earthy-brown: #A98562;
-  --primary-text: #292E27;
-  --secondary-text: #596155;
+  --earthy-brown: #9E7A57;
+  --primary-text: #222920;
+  --secondary-text: #4F584B;
 
-  /* Surfaces (Warm Ivory & Soft Cream dominate) */
-  --bg-app: #F6F3E9;              /* Main background */
-  --bg-surface: #FDFBF7;          /* Light warm ivory card surface */
-  --bg-surface-cream: #EDE8DB;    /* Soft cream container surface */
-  --bg-surface-elevated: #FDFBF7; /* Light warm ivory card surface */
-  --bg-surface-subtle: #EAE5D8;   /* Muted warm surface */
-  --bg-hover: #E2DDD0;            /* Subtle warm hover */
-  --bg-nav: #183D2B;              /* Deep Forest Green for top navigation */
+  /* Surfaces (Warm Ivory, Soft Sage & Earthy Cream tones) */
+  --bg-app: #F2EDE2;              /* Noticeably warm, earthy backdrop */
+  --bg-surface: #FAF5EB;          /* Warm earthy ivory card surface */
+  --bg-surface-cream: #EAE3D2;    /* Soft cream container surface */
+  --bg-surface-elevated: #FDF9F0; /* Light warm ivory elevated card surface */
+  --bg-surface-subtle: #E5DFCE;   /* Muted warm surface */
+  --bg-hover: #DFD7C6;            /* Subtle warm hover */
+  --bg-nav: #143524;              /* Deep Forest Green for top navigation */
 
   /* Primary Brand Palettes */
-  --pine: #183D2B;
-  --pine-light: #24543C;
-  --pine-dark: #10291D;
-  --sage: #527653;
-  --sage-light: #688F69;
-  --sage-dim: rgba(82, 118, 83, 0.16);
-  --sage-border: rgba(82, 118, 83, 0.35);
+  --pine: #143524;
+  --pine-light: #1F4C33;
+  --pine-dark: #0D2418;
+  --sage: #4A6D4B;
+  --sage-light: #5F8760;
+  --sage-dim: rgba(74, 109, 75, 0.16);
+  --sage-border: rgba(74, 109, 75, 0.35);
 
   /* Highlights & Accents */
   --highlight: #B7C96B;           /* Soft olive-lime */

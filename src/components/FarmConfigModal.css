@@ -21,8 +21,8 @@
   width: 100%;
   max-width: 760px;
   max-height: 90vh;
-  background: #FFFFFF;
-  border: 1px solid rgba(82, 118, 83, 0.25);
+  background: var(--bg-surface, #FAF5EB);
+  border: 1px solid rgba(74, 109, 75, 0.25);
   border-radius: var(--radius-xl);
   box-shadow: 0 20px 50px rgba(24, 61, 43, 0.2);
   display: flex;
