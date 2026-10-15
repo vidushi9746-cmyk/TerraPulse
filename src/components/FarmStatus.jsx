@@ -177,7 +177,9 @@ export function FarmStatus({ simulation = {} }) {
           <div className="advisory-meta-item">
             <span className="ad-meta-label">Water Conserved Today:</span>
             <span className="ad-meta-val text-emerald font-semibold">
-              {simulation?.waterPreservedTodayGal ?? 0} Gal Saved
+              {simulation?.waterPreservedTodayL !== undefined
+                ? `${simulation.waterPreservedTodayL.toLocaleString()} L Saved`
+                : `${simulation?.waterPreservedTodayGal ?? 0} Gal Saved`}
             </span>
           </div>
         </div>

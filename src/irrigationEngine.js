@@ -655,21 +655,30 @@ export function compareIrrigation(environmentState, initialSoilMoisture, options
   );
 
   // 6. Compute comparison metrics
-  const waterSavedMm = clampWater(conventional.waterAppliedMm - forecastAware.waterAppliedMm);
+  const isZeroBaseline = conventional.waterAppliedMm === 0;
+  const rawWaterSaved = conventional.waterAppliedMm - forecastAware.waterAppliedMm;
+  const waterSavedMm = Math.round(rawWaterSaved * 100) / 100;
   const waterSavedPercent =
-    conventional.waterAppliedMm > 0
-      ? Math.round((waterSavedMm / conventional.waterAppliedMm) * 1000) / 10
-      : 0;
+    !isZeroBaseline
+      ? Math.round((rawWaterSaved / conventional.waterAppliedMm) * 1000) / 10
+      : null;
+  const waterSavedPercentDisplay =
+    isZeroBaseline
+      ? 'N/A'
+      : `${waterSavedPercent.toFixed(1)}%`;
 
   let recommendation;
   let summary;
 
   if (waterSavedMm > 0) {
     recommendation = 'FORECAST_AWARE';
-    summary = `Forecast-aware strategy conserves ${waterSavedMm.toFixed(1)} mm (${waterSavedPercent.toFixed(1)}%) of water by utilizing predicted rainfall.`;
+    summary = `Forecast-aware strategy conserves ${waterSavedMm.toFixed(1)} mm (${waterSavedPercentDisplay}) of water by utilizing predicted rainfall.`;
   } else if (conventional.decision === 'SKIP' && forecastAware.decision === 'SKIP') {
     recommendation = 'NONE_NEEDED';
-    summary = 'Soil moisture is currently adequate. Neither strategy requires irrigation at this time.';
+    summary = 'Soil moisture is currently adequate. Neither strategy requires irrigation at this time (savings: N/A).';
+  } else if (waterSavedMm < 0) {
+    recommendation = 'CONVENTIONAL';
+    summary = `Forecast-aware strategy requires ${Math.abs(waterSavedMm).toFixed(1)} mm (${Math.abs(waterSavedPercent).toFixed(1)}%) more water than conventional strategy.`;
   } else {
     recommendation = 'CONVENTIONAL';
     summary = 'No significant water savings from forecast; both strategies recommend irrigation for crop protection.';
@@ -708,6 +717,7 @@ export function compareIrrigation(environmentState, initialSoilMoisture, options
     comparison: {
       waterSavedMm,
       waterSavedPercent,
+      waterSavedPercentDisplay,
       totalRainMm: forecastAware.totalRainMm,
       recommendation,
       summary,
